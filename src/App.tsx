@@ -63,7 +63,12 @@ function shuffle<T>(arr: T[]): T[] {
 function buildDeck(pairs: CardPair[]): Card[] {
   const cards: Card[] = pairs.flatMap((p, i) => [
     { id: `img-${i}`, pairId: i, type: "image" as const, content: p.image },
-    { id: `txt-${i}`, pairId: i, type: "text" as const, content: p.description },
+    {
+      id: `txt-${i}`,
+      pairId: i,
+      type: "text" as const,
+      content: p.description,
+    },
   ]);
   return shuffle(cards);
 }
@@ -342,7 +347,7 @@ export default function FlipCardGame() {
         }
 
         .card-back-label {
-          font-size: 0.5rem;
+          font-size: 1rem;
           letter-spacing: 0.25em;
           text-transform: uppercase;
           color: #c8b896;
@@ -548,7 +553,7 @@ export default function FlipCardGame() {
       </div>
 
       <div className="grid">
-        {deck.map((card) => {
+        {deck.map((card, index) => {
           const faceUp = isFaceUp(card);
           const matchedState = isMatched(card);
           const wrongState = isWrong(card);
@@ -569,7 +574,7 @@ export default function FlipCardGame() {
                 {/* BACK */}
                 <div className="card-face card-back">
                   <span className="card-back-star">✦</span>
-                  <span className="card-back-label">1945</span>
+                  <span className="card-back-label">{index + 1}</span>
                 </div>
 
                 {/* FRONT */}
@@ -595,7 +600,9 @@ export default function FlipCardGame() {
       </div>
 
       <div className="bottom">
-        <button className="btn" onClick={reset}>↺ &nbsp;Chơi lại</button>
+        <button className="btn" onClick={reset}>
+          ↺ &nbsp;Chơi lại
+        </button>
       </div>
 
       {won && (
@@ -603,7 +610,9 @@ export default function FlipCardGame() {
           <div className="win-box">
             <span className="win-stamp">★</span>
             <div className="win-title">Xuất sắc!</div>
-            <button className="btn" onClick={reset}>Chơi lại từ đầu</button>
+            <button className="btn" onClick={reset}>
+              Chơi lại từ đầu
+            </button>
           </div>
         </div>
       )}
