@@ -14,40 +14,12 @@ interface Card {
 
 const CARD_PAIRS: CardPair[] = [
   {
-    image: "/phapnhat.png",
-    description: "Hai thế lực áp bức dân tộc năm 1945.",
+    image: "/cat.webp",
+    description: "Mèo cam",
   },
   {
-    image: "/doi1945.png",
-    description: "Nạn đói cướp đi hơn 2 triệu sinh mạng.",
-  },
-  {
-    image: "/nole.png",
-    description: "Thân phận dân tộc nô lệ thời thuộc địa.",
-  },
-  {
-    image: "/kehoach.jpg",
-    description: "Các chiến sĩ Việt Minh họp bàn kế hoạch.",
-  },
-  {
-    image: "/nhathavuki.png",
-    description: "Quân Nhật hạ vũ khí, buông súng trước quân Đồng minh.",
-  },
-  {
-    image: "/thoico.jpg",
-    description: "Thời cơ cách mạng đã chín muồi.",
-  },
-  {
-    image: "/quangtruong.jpg",
-    description: "Quảng trường Ba Đình",
-  },
-  {
-    image: "/bacHodoctuyenngon.webp",
-    description: "Bác Hồ đọc bản Tuyên ngôn Độc lập.",
-  },
-  {
-    image: "/chiacat.webp",
-    description: "Đất nước bị chia cắt.",
+    image: "/corgi.jpg",
+    description: "Chó Corgi",
   },
 ];
 
@@ -73,13 +45,41 @@ function buildDeck(pairs: CardPair[]): Card[] {
   return shuffle(cards);
 }
 
-export default function FlipCardGame() {
+export default function Demo() {
   const [deck, setDeck] = useState<Card[]>(() => buildDeck(CARD_PAIRS));
   const [flipped, setFlipped] = useState<Card[]>([]);
   const [matched, setMatched] = useState<number[]>([]);
   const [locked, setLocked] = useState(false);
   const [won, setWon] = useState(false);
   const [wrong, setWrong] = useState<string[]>([]);
+
+  useEffect(() => {
+    console.log("=== DANH SÁCH CÁC CẶP THẺ (SAU KHI XÁO TRỘN) ===");
+
+    // Group các thẻ lại theo pairId
+    const groupedPairs = deck.reduce(
+      (acc, card) => {
+        if (!acc[card.pairId]) acc[card.pairId] = { image: -1, text: -1 };
+
+        // Tìm vị trí thực tế của thẻ (index 1-based) trong mảng deck đang hiển thị
+        const actualIndex = deck.findIndex((c) => c.id === card.id) + 1;
+
+        if (card.type === "image") {
+          acc[card.pairId].image = actualIndex;
+        } else {
+          acc[card.pairId].text = actualIndex;
+        }
+        return acc;
+      },
+      {} as Record<number, { image: number; text: number }>,
+    );
+
+    // In ra console theo format "Số card (Image) - Số card (Text)"
+    Object.keys(groupedPairs).forEach((pairId) => {
+      const pair = groupedPairs[parseInt(pairId)];
+      console.log(`${pair.image} - ${pair.text}`);
+    });
+  }, [deck]);
 
   const reset = useCallback(() => {
     setDeck(buildDeck(CARD_PAIRS));
@@ -132,30 +132,18 @@ export default function FlipCardGame() {
   const isWrong = (card: Card) => wrong.includes(card.id);
 
   useEffect(() => {
-    console.log("=== DANH SÁCH CÁC CẶP THẺ (SAU KHI XÁO TRỘN) ===");
-
+    console.log("=== THẺ SAU KHI RENDER VÀ XÁO TRỘN ===");
     const groupedPairs = deck.reduce(
       (acc, card) => {
-        if (!acc[card.pairId]) acc[card.pairId] = { image: -1, text: -1 };
-
-        // Tìm vị trí thực tế của thẻ (index 1-based) trong mảng deck đang hiển thị
-        const actualIndex = deck.findIndex((c) => c.id === card.id) + 1;
-
-        if (card.type === "image") {
-          acc[card.pairId].image = actualIndex;
-        } else {
-          acc[card.pairId].text = actualIndex;
-        }
+        if (!acc[card.pairId]) acc[card.pairId] = [];
+        acc[card.pairId].push(card);
         return acc;
       },
-      {} as Record<number, { image: number; text: number }>,
+      {} as Record<number, Card[]>,
     );
 
-    // In ra console theo format "Số card (Image) - Số card (Text)"
-    Object.keys(groupedPairs).forEach((pairId) => {
-      const pair = groupedPairs[parseInt(pairId)];
-      console.log(`${pair.image} - ${pair.text}`);
-    });
+    console.log(groupedPairs);
+    console.log("Chi tiết mảng deck gốc:", deck);
   }, [deck]);
 
   return (
@@ -288,7 +276,7 @@ export default function FlipCardGame() {
         /* === GRID === */
         .grid {
           display: grid;
-          grid-template-columns: repeat(6, 1fr);
+          grid-template-columns: repeat(4, 1fr);
           gap: 14px;
           width: 100%;
           max-width: 1280px;
@@ -624,12 +612,6 @@ export default function FlipCardGame() {
             </div>
           );
         })}
-      </div>
-
-      <div className="bottom">
-        <button className="btn" onClick={reset}>
-          ↺ &nbsp;Chơi lại
-        </button>
       </div>
 
       {won && (
