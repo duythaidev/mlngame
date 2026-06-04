@@ -15,31 +15,39 @@ interface Card {
 const CARD_PAIRS: CardPair[] = [
   {
     image: "/phapnhat.png",
-    description: "Ảnh lính Pháp và Nhật – Hai thế lực áp bức dân tộc năm 1945.",
+    description: "Hai thế lực áp bức dân tộc năm 1945.",
   },
   {
     image: "/doi1945.png",
-    description: "Ảnh người dân gầy sọp – Nạn đói cướp đi hơn 2 triệu sinh mạng.",
+    description: "Nạn đói cướp đi hơn 2 triệu sinh mạng.",
   },
   {
     image: "/nole.png",
-    description: "Ảnh xiềng xích bị khóa chặt – Thân phận dân tộc nô lệ thời thuộc địa.",
+    description: "Thân phận dân tộc nô lệ thời thuộc địa.",
   },
   {
     image: "/kehoach.jpg",
-    description: "Ảnh các chiến sĩ Việt Minh họp bàn kế hoạch – Sự chuẩn bị dưới sự lãnh đạo của Đảng và Mặt trận.",
+    description: "Các chiến sĩ Việt Minh họp bàn kế hoạch.",
   },
   {
     image: "/nhathavuki.png",
-    description: "Ảnh quân Nhật hạ vũ khí, buông súng trước quân Đồng minh.",
+    description: "Quân Nhật hạ vũ khí, buông súng trước quân Đồng minh.",
   },
   {
     image: "/thoico.jpg",
-    description: "Ảnh chiếc đồng hồ cát đang chảy đến hạt cuối cùng – Thời cơ cách mạng đã chín muồi.",
+    description: "Thời cơ cách mạng đã chín muồi.",
   },
   {
-    image: "/quangtruong.png",
-    description: "Ảnh Quảng trường Ba Đình – Nơi diễn ra sự kiện ngày 2/9/1945.",
+    image: "/quangtruong.jpg",
+    description: "Quảng trường Ba Đình",
+  },
+  {
+    image: "/bacHodoctuyenngon.webp",
+    description: "Bác Hồ đứng trên bục đọc bản Tuyên ngôn Độc lập.",
+  },
+  {
+    image: "/chiacat.webp",
+    description: "Đất nước bị chia cắt.",
   },
 ];
 
@@ -248,10 +256,10 @@ export default function FlipCardGame() {
         /* === GRID === */
         .grid {
           display: grid;
-          grid-template-columns: repeat(5, 1fr);
+          grid-template-columns: repeat(6, 1fr);
           gap: 14px;
           width: 100%;
-          max-width: 1080px;
+          max-width: 1280px;
           position: relative;
           z-index: 1;
         }
