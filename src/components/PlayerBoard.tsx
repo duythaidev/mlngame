@@ -17,7 +17,30 @@ export default function PlayerBoard() {
   const { session, loading } = useGameSession(sessionId);
   const { broadcastBoardState } = useGameBroadcast(sessionId, true);
 
+  const [kicked, setKicked] = useState(false);
   const [revealCountdown, setRevealCountdown] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (joined && playerId && !playerName) {
+      supabase.from("players").select("name").eq("id", playerId).single()
+        .then(({ data }) => { if (data) setPlayerName(data.name); });
+    }
+  }, [joined, playerId, playerName]);
+
+  useEffect(() => {
+    if (!playerId) return;
+    const channel = supabase
+      .channel(`player-watch-${playerId}`)
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "players", filter: `id=eq.${playerId}` },
+        () => {
+          setKicked(true);
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [playerId]);
 
   useEffect(() => {
     if (session?.phase === "reveal" && session.reveal_started_at) {
@@ -72,20 +95,20 @@ export default function PlayerBoard() {
   };
 
   if (!sessionId) {
-    return <div style={{ color: "white", padding: 40 }}>Vui lòng cung cấp link có chứa session ID.</div>;
+    return <div style={{ padding: 40 }}>Vui lòng cung cấp link có chứa session ID.</div>;
   }
 
   if (loading) {
-    return <div style={{ color: "white", padding: 40 }}>Đang tải...</div>;
+    return <div style={{ padding: 40 }}>Đang tải...</div>;
   }
 
   if (!session) {
-    return <div style={{ color: "white", padding: 40 }}>Không tìm thấy session</div>;
+    return <div style={{ padding: 40 }}>Không tìm thấy session</div>;
   }
 
   if (!joined) {
     return (
-      <div style={{ color: "white", padding: 40, textAlign: "center" }}>
+      <div style={{ padding: 40, textAlign: "center" }}>
         <h2>Tham gia ván chơi</h2>
         <input
           type="text"
@@ -99,17 +122,47 @@ export default function PlayerBoard() {
     );
   }
 
+  if (kicked) {
+    return (
+      <div style={{ padding: 40, textAlign: "center" }}>
+        <h2>Bạn đã bị Admin loại khỏi ván chơi.</h2>
+      </div>
+    );
+  }
+
   if (session.phase === "waiting") {
     return (
-      <div style={{ color: "white", padding: 40, textAlign: "center" }}>
-        <h2>Đang chờ Admin bắt đầu ván đấu...</h2>
+      <div style={{
+      
+        padding: 40,
+        textAlign: "center",
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 16,
+      }}>
+        <div className="rule">
+          <div className="rule-line" />
+          <div className="rule-star">✦</div>
+          <div className="rule-line" />
+        </div>
+        <h2>Xin chào, {playerName || "bạn"}!</h2>
+        <p style={{ fontSize: 18, opacity: 0.8 }}>
+          Bạn đã tham gia thành công. Đang chờ Admin bắt đầu ván đấu...
+        </p>
+        <div className="spinner" />
+        <p style={{ fontSize: 14, opacity: 0.6 }}>
+          Khi Admin bấm bắt đầu, các thẻ bài sẽ tự động hiện ra để bạn ghi nhớ vị trí trong 60 giây.
+        </p>
       </div>
     );
   }
 
   if (session.phase === "ended") {
     return (
-      <div style={{ color: "white", padding: 40, textAlign: "center" }}>
+      <div style={{ padding: 40, textAlign: "center" }}>
         <h2>Ván chơi đã kết thúc.</h2>
       </div>
     );

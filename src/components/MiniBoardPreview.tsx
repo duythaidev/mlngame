@@ -7,9 +7,13 @@ interface MiniBoardPreviewProps {
   boardState?: BoardUpdatePayload;
 }
 
-export default function MiniBoardPreview({ seed, playerName, boardState }: MiniBoardPreviewProps) {
+export default function MiniBoardPreview({
+  seed,
+  playerName,
+  boardState,
+}: MiniBoardPreviewProps) {
   return (
-    <div style={{ transform: "scale(0.5)", transformOrigin: "top left", width: "100%", height: "100%" }}>
+    <div style={{ width: "100%", height: "100%" }}>
       <FlipCardGame
         seed={seed}
         readOnly={true}

@@ -124,7 +124,7 @@ export default function FlipCardGame({
       )}
       
       {readOnly && playerName && (
-        <div style={{ textAlign: 'center', marginBottom: '10px', fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>
+        <div style={{ textAlign: 'center', marginBottom: '10px', fontSize: '18px', fontWeight: 'bold',  }}>
           {playerName} ({externalMatchedIds.length}/{CARD_PAIRS.length})
         </div>
       )}

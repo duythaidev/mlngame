@@ -6,8 +6,14 @@ import { usePlayers } from "../hooks/usePlayers";
 import { useResults } from "../hooks/useResults";
 import { useGameBroadcast } from "../hooks/useGameBroadcast";
 import MiniBoardPreview from "./MiniBoardPreview";
+import AdminLogin from "./AdminLogin";
 
 export default function AdminDashboard() {
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => sessionStorage.getItem("admin_logged_in") === "true"
+  );
+  const [confirmKickPlayer, setConfirmKickPlayer] = useState<{ id: string; name: string } | null>(null);
+
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session");
 
@@ -68,6 +74,15 @@ export default function AdminDashboard() {
     await supabase.from("results").delete().eq("session_id", sessionId);
   };
 
+  const kickPlayer = async (playerId: string) => {
+    await supabase.from("players").delete().eq("id", playerId);
+    setConfirmKickPlayer(null);
+  };
+
+  if (!isLoggedIn) {
+    return <AdminLogin onLoginSuccess={() => setIsLoggedIn(true)} />;
+  }
+
   if (!sessionId) {
     return (
       <div style={{ padding: 40, color: "white", textAlign: "center" }}>
@@ -116,7 +131,14 @@ export default function AdminDashboard() {
           <h3>Live Boards</h3>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
             {players.map((player) => (
-              <div key={player.id} style={{ border: "1px solid #444", borderRadius: 8, padding: 10, minHeight: 400, background: '#1a1a1a', position: 'relative', overflow: 'hidden' }}>
+              <div key={player.id} style={{ border: "1px solid #444", borderRadius: 8, padding: 6, maxHeight: 500, background: '#1a1a1a', position: 'relative', overflow: 'hidden' }}>
+                <button
+                  className="btn"
+                  style={{ background: "#c0392b", position: "absolute", top: 8, right: 8, fontSize: 12, padding: "4px 10px", zIndex: 10 }}
+                  onClick={() => setConfirmKickPlayer({ id: player.id, name: player.name })}
+                >
+                  Kick
+                </button>
                 <MiniBoardPreview
                   seed={session.seed}
                   playerName={player.name}
@@ -148,13 +170,25 @@ export default function AdminDashboard() {
           </div>
           
           <div style={{ background: "#222", padding: 20, borderRadius: 8 }}>
-            <h3>Link mời:</h3>
             <p style={{ wordBreak: 'break-all', fontSize: 14 }}>
               {window.location.origin}/play?session={sessionId}
             </p>
           </div>
         </div>
       </div>
+
+      {confirmKickPlayer && (
+        <div className="win-overlay" onClick={(e) => { if (e.target === e.currentTarget) setConfirmKickPlayer(null); }}>
+          <div className="win-box" style={{ padding: 30 }}>
+            <div className="win-title" style={{ fontSize: 24, marginBottom: 20 }}>Xác nhận Kick</div>
+            <p style={{ color: "black", marginBottom: 30 }}>Bạn có chắc muốn loại <strong>{confirmKickPlayer.name}</strong> khỏi ván chơi?</p>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              <button className="btn" style={{ background: "#c0392b" }} onClick={() => kickPlayer(confirmKickPlayer.id)}>Xác nhận Kick</button>
+              <button className="btn" style={{ background: "#555" }} onClick={() => setConfirmKickPlayer(null)}>Hủy</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

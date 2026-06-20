@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 export interface Player {
   id: string;
@@ -16,11 +16,11 @@ export function usePlayers(sessionId: string | null) {
 
     const fetchPlayers = async () => {
       const { data } = await supabase
-        .from('players')
-        .select('*')
-        .eq('session_id', sessionId)
-        .order('joined_at', { ascending: true });
-      
+        .from("players")
+        .select("*")
+        .eq("session_id", sessionId)
+        .order("joined_at", { ascending: true });
+
       if (data) setPlayers(data as Player[]);
     };
 
@@ -29,16 +29,28 @@ export function usePlayers(sessionId: string | null) {
     const channel = supabase
       .channel(`players_changes_${sessionId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'players',
+          event: "INSERT",
+          schema: "public",
+          table: "players",
           filter: `session_id=eq.${sessionId}`,
         },
         (payload) => {
           setPlayers((prev) => [...prev, payload.new as Player]);
-        }
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "players",
+          filter: `session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          setPlayers((prev) => prev.filter((p) => p.id !== payload.old.id));
+        },
       )
       .subscribe();
 
