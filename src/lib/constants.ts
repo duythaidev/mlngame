@@ -30,7 +30,7 @@ export const CARD_PAIRS: CardPair[] = [
     description: "Hình thái giá trị giản đơn",
   },
   {
-    image: "/mln2/hangtienhang.webp",
+    image: "/mln2/hangtienhang.png",
     description: "Sơ đồ H - T - H",
   },
   {

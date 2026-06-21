@@ -235,7 +235,7 @@ export default function AdminDashboard() {
                   border: "1px solid #444",
                   borderRadius: 8,
                   padding: 6,
-                  maxHeight: 500,
+                  maxHeight: 600,
                   background: "#1a1a1a",
                   position: "relative",
                   overflow: "hidden",
