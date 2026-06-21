@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { useGameSession } from "../hooks/useGameSession";
 import { useGameBroadcast } from "../hooks/useGameBroadcast";
 import FlipCardGame from "./FlipCardGame";
+import { REVEAL_TIMEOUT_SECONDS } from "../lib/constants";
 
 export default function PlayerBoard() {
   const [searchParams] = useSearchParams();
@@ -47,8 +48,7 @@ export default function PlayerBoard() {
       const interval = setInterval(() => {
         const start = new Date(session.reveal_started_at!).getTime();
         const now = Date.now();
-        // Giả sử reveal 60s
-        const remaining = 60 - Math.floor((now - start) / 1000);
+        const remaining = REVEAL_TIMEOUT_SECONDS - Math.floor((now - start) / 1000);
         if (remaining > 0) {
           setRevealCountdown(remaining);
         } else {
@@ -154,7 +154,7 @@ export default function PlayerBoard() {
         </p>
         <div className="spinner" />
         <p style={{ fontSize: 14, opacity: 0.6 }}>
-          Khi Admin bấm bắt đầu, các thẻ bài sẽ tự động hiện ra để bạn ghi nhớ vị trí trong 60 giây.
+          Khi Admin bấm bắt đầu, các thẻ bài sẽ tự động hiện ra để bạn ghi nhớ vị trí trong {REVEAL_TIMEOUT_SECONDS} giây.
         </p>
       </div>
     );

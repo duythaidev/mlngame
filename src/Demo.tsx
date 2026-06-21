@@ -151,7 +151,7 @@ export default function Demo() {
     <div className="root">
       <div className="header">
         <div className="title">
-          Cách Mạng <span className="title-red">Tháng Tám</span>
+          Tiền tệ <span className="title-red">Demo</span>
         </div>
         <div className="rule">
           <div className="rule-line" />

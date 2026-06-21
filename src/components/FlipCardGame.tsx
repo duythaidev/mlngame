@@ -114,7 +114,7 @@ export default function FlipCardGame({
     <div className={`root ${readOnly ? 'readonly-board' : ''}`}>
       {!readOnly && (
         <div className="header">
-          <div className="title">Cách Mạng <span className="title-red">Tháng Tám</span></div>
+          <div className="title">Tiền tệ <span className="title-red">và giá trị thặng dư</span></div>
           <div className="rule">
             <div className="rule-line" />
             <div className="rule-star">✦</div>

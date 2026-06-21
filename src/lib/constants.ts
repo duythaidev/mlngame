@@ -10,41 +10,35 @@ export interface Card {
   content: string;
 }
 
+export const REVEAL_TIMEOUT_SECONDS = 90;
+
 export const CARD_PAIRS: CardPair[] = [
   {
-    image: "/phapnhat.png",
-    description: "Hai thế lực áp bức dân tộc năm 1945.",
+    image: "/mln2/banvidau.avif",
+    description: "Bản vị dầu",
+  },
+  { 
+    image: "/mln2/banvivang.jpg",
+    description: "Bản vị vàng",
   },
   {
-    image: "/doi1945.png",
-    description: "Nạn đói cướp đi hơn 2 triệu sinh mạng.",
+    image: "/mln2/thuocdogiatri.webp",
+    description: "Thước đo giá trị",
   },
   {
-    image: "/nole.png",
-    description: "Thân phận dân tộc nô lệ thời thuộc địa.",
+    image: "/mln2/traodoingayxua.png",
+    description: "Hình thái giá trị giản đơn",
   },
   {
-    image: "/kehoach.jpg",
-    description: "Các chiến sĩ Việt Minh họp bàn kế hoạch.",
+    image: "/mln2/hangtienhang.webp",
+    description: "Sơ đồ H - T - H ",
   },
   {
-    image: "/nhathavuki.png",
-    description: "Quân Nhật hạ vũ khí, buông súng trước quân Đồng minh.",
+    image: "/mln2/phuongtienluutru.webp",
+    description: "Phương tiện lưu trữ",
   },
   {
-    image: "/thoico.jpg",
-    description: "Thời cơ cách mạng đã chín muồi.",
-  },
-  {
-    image: "/quangtruong.jpg",
-    description: "Quảng trường Ba Đình",
-  },
-  {
-    image: "/bacHodoctuyenngon.webp",
-    description: "Bác Hồ đọc bản Tuyên ngôn Độc lập.",
-  },
-  {
-    image: "/chiacat.webp",
-    description: "Đất nước bị chia cắt.",
+    image: "/mln2/quanhesanxuat.png",
+    description: "Quan hệ sản xuất",
   },
 ];

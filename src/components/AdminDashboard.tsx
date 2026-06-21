@@ -170,7 +170,7 @@ export default function AdminDashboard() {
           </div>
           
           <div style={{ background: "#222", padding: 20, borderRadius: 8 }}>
-            <p style={{ wordBreak: 'break-all', fontSize: 14 }}>
+            <p style={{ wordBreak: 'break-all', fontSize: 14, color: "#222" }}>
               {window.location.origin}/play?session={sessionId}
             </p>
           </div>
