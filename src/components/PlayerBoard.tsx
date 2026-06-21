@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabase";
 import { useGameSession } from "../hooks/useGameSession";
 import { useGameBroadcast } from "../hooks/useGameBroadcast";
 import FlipCardGame from "./FlipCardGame";
-import { REVEAL_TIMEOUT_SECONDS } from "../lib/constants";
+import { CARD_PAIRS, REVEAL_TIMEOUT_SECONDS } from "../lib/constants";
 
 export default function PlayerBoard() {
   const [searchParams] = useSearchParams();
@@ -178,10 +178,9 @@ export default function PlayerBoard() {
   // Let's pass `readOnly` true when in reveal phase, and externalFaceUpIds to show all.
   // Oh wait, `FlipCardGame` needs to know all card IDs. We don't have them easily here without re-building deck.
   // Instead, let's just show a message. Or we can just build deck here to pass to externalFaceUpIds.
-  const deckSize = 18; // 9 pairs * 2
   const allCardIds = [];
   if (isReveal) {
-    for (let i = 0; i < deckSize / 2; i++) {
+    for (let i = 0; i < CARD_PAIRS.length; i++) {
       allCardIds.push(`img-${i}`);
       allCardIds.push(`txt-${i}`);
     }

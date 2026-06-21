@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useGameSession } from "../hooks/useGameSession";
@@ -8,7 +8,7 @@ import { useFinalResults } from "../hooks/useFinalResults";
 import { useGameBroadcast } from "../hooks/useGameBroadcast";
 import MiniBoardPreview from "./MiniBoardPreview";
 import AdminLogin from "./AdminLogin";
-import { CARD_PAIRS } from "../lib/constants";
+import { CARD_PAIRS, REVEAL_TIMEOUT_SECONDS } from "../lib/constants";
 
 export default function AdminDashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -29,6 +29,20 @@ export default function AdminDashboard() {
   const { boards, clearBoards } = useGameBroadcast(sessionId, false);
 
   const [creating, setCreating] = useState(false);
+  const [revealCountdown, setRevealCountdown] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (session?.phase === "reveal" && session.reveal_started_at) {
+      const interval = setInterval(() => {
+        const start = new Date(session.reveal_started_at!).getTime();
+        const remaining = REVEAL_TIMEOUT_SECONDS - Math.floor((Date.now() - start) / 1000);
+        setRevealCountdown(remaining > 0 ? remaining : 0);
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setRevealCountdown(null);
+    }
+  }, [session?.phase, session?.reveal_started_at]);
 
   const createSession = async () => {
     setCreating(true);
@@ -177,7 +191,7 @@ export default function AdminDashboard() {
           )}
           {session.phase === "reveal" && (
             <button className="btn" onClick={startPlay}>
-              Start Play Phase
+              Start Play Phase{revealCountdown !== null && ` (còn ${revealCountdown}s)`}
             </button>
           )}
           {session.phase === "play" && (
@@ -248,8 +262,9 @@ export default function AdminDashboard() {
                   seed={session.seed}
                   playerName={player.name}
                   boardState={boards[player.id]}
+                  forceRevealAll={session.phase === "reveal"}
                 />
-              </div>
+               </div>
             ))}
             {players.length === 0 && <p>Chưa có player nào join.</p>}
           </div>
