@@ -160,26 +160,35 @@ export class GameEngine {
       if (grounded && v.y >= -0.01) a.jumped = false; // chỉ coi là đã đáp đất khi không còn đang bay lên
 
       let target = (inp.r - inp.l) * PHYS.speed;
-      // người chơi chặn nhau như tường: lao vào người khác thì dừng ngay, không đẩy được
+      // người chơi chặn nhau như tường: chỉ hãm vận tốc CỦA MÌNH đang hướng vào người kia
+      // (tối đa bằng tốc độ họ đang đi ra xa), không bao giờ bị kéo theo người đang lao vào mình
       const blk = this.blocker(a);
-      if (blk && (v.x - blk.vx) * blk.dir > 0) {
-        v.x = blk.vx;
-        body.setLinearVelocity(new Vec2(v.x, v.y));
+      if (blk) {
+        const allowed = Math.max(0, blk.vx * blk.dir); // tốc độ được phép tiến về phía họ
+        if (v.x * blk.dir > allowed) {
+          v.x = blk.dir * allowed;
+          body.setLinearVelocity(new Vec2(v.x, v.y));
+        }
+        if (target * blk.dir > allowed) target = blk.dir * allowed;
       }
-      if (blk && Math.sign(target) === blk.dir) target = blk.vx;
-      // như ma sát tĩnh: đủ lực để đạt vận tốc mục tiêu ngay trong 1 bước, nhưng không vượt lực bám
-      const want = (m * (target - v.x)) / PHYS.step;
+      const pressing = inp.l !== inp.r;
+      // bấm chạy: như ma sát tĩnh, đủ lực đạt vận tốc mục tiêu ngay trong 1 bước (không vượt lực bám).
+      // đứng yên: phanh TỈ LỆ vận tốc → đang trượt thì dừng gần như ngay (không lướt),
+      //           nhưng bị dây kéo liên tục (người treo dưới hố) thì vẫn bị lôi đi từ từ.
+      const want = pressing || !grounded ? (m * (target - v.x)) / PHYS.step : -m * v.x * PHYS.idleBrake;
       let maxF: number;
       if (grounded) {
         // lực ép = trọng lượng (+ người đứng trên đầu) − lực dây kéo lên
         const normal = Math.max(0, m * PHYS.gravity * (1 + a.load) - a.ropeLift);
         maxF = this.slippingOffEdge(a) ? 0 : PHYS.grip * normal;
-      } else if (inp.l === inp.r) {
+      } else if (!pressing) {
         maxF = 0; // không bấm gì: trên không không có lực cản ngang, giữ quán tính
       } else {
         maxF = (a.jumped ? PHYS.airControl : PHYS.swingControl) * m * PHYS.gravity;
       }
       if (maxF > 0) body.applyForceToCenter(new Vec2(clamp(want, -maxF, maxF), 0), true);
+
+      if (!grounded) this.stepOverLedge(a);
 
       // nhảy: phải đứng trên mặt phẳng và KHÔNG có ai đè trên đầu
       if (inp.j === 1 && a.prevJ === 0 && grounded && a.load === 0) {
@@ -212,7 +221,9 @@ export class GameEngine {
       if (stretch <= 0 || len < 1e-4) continue; // dây chùng
       const ua = new Vec2((pb.x - pa.x) / len, (pb.y - pa.y) / len);
       const ub = new Vec2(-ua.x, -ua.y);
-      segs.push({ A, B, ua, ub, stretch, ima: 1 / A.body.getMass(), imb: 1 / B.body.getMass(), total: 0 });
+      const mMin = Math.min(A.body.getMass(), B.body.getMass());
+      const maxImpulse = PHYS.ropeMaxTension * mMin * PHYS.gravity * PHYS.step;
+      segs.push({ A, B, ua, ub, stretch, ima: 1 / A.body.getMass(), imb: 1 / B.body.getMass(), total: 0, maxImpulse });
     }
 
     for (let it = 0; it < PHYS.ropeIters; it++) {
@@ -221,12 +232,26 @@ export class GameEngine {
         const vb = s.B.body.getLinearVelocity();
         // tốc độ dây dài ra (dương = hai người đang rời xa nhau)
         const grow = -Vec2.dot(va, s.ua) - Vec2.dot(vb, s.ub);
-        const bias = (PHYS.ropeBias * Math.min(s.stretch, 0.5)) / PHYS.step;
+        const bias = (PHYS.ropeBias * Math.max(0, Math.min(s.stretch, 0.5) - PHYS.ropeSlop)) / PHYS.step;
         const old = s.total;
-        s.total = Math.max(0, old + (grow + bias) / (s.ima + s.imb)); // dây chỉ kéo, không đẩy
+        // dây chỉ kéo, không đẩy. Trong đoạn giãn nhỏ, lực căng có trần (dây co giãn hấp thụ cú giật);
+        // giãn quá ropeMaxStretch thì dây cứng hẳn (không bao giờ dài vô hạn)
+        const cap = s.stretch < PHYS.ropeMaxStretch ? s.maxImpulse : Infinity;
+        s.total = Math.min(cap, Math.max(0, old + (grow + bias) / (s.ima + s.imb)));
         const d = s.total - old;
         s.A.body.setLinearVelocity(new Vec2(va.x + s.ua.x * d * s.ima, va.y + s.ua.y * d * s.ima));
         s.B.body.setLinearVelocity(new Vec2(vb.x + s.ub.x * d * s.imb, vb.y + s.ub.y * d * s.imb));
+      }
+    }
+
+    // người đang lơ lửng bị dây kéo LÊN: giới hạn tốc độ đi lên (thay cho ma sát người–vách hãm đà),
+    // tránh bị "bắn" vọt lên khi vừa thoát miệng hố
+    for (const sg of segs) {
+      if (sg.total <= 0) continue;
+      for (const [act, u] of [[sg.A, sg.ua], [sg.B, sg.ub]] as const) {
+        if (act.supports.size > 0 || u.y >= 0) continue; // đang đứng, hoặc dây không kéo lên
+        const v = act.body.getLinearVelocity();
+        if (v.y < -PHYS.ropeLiftSpeed) act.body.setLinearVelocity(new Vec2(v.x, -PHYS.ropeLiftSpeed));
       }
     }
 
@@ -238,6 +263,32 @@ export class GameEngine {
       s.A.ropeLift += tension * -s.ua.y;
       s.B.ropeLift += tension * -s.ub.y;
     }
+  }
+
+  /**
+   * Bước qua mép: người đang lơ lửng bị dây kéo NGANG vào vách, mà mép vách chỉ cao hơn chân
+   * tối đa PHYS.stepUp → nhún vừa đủ để lên mép (như trèo), thay vì kẹt ngay dưới miệng hố.
+   */
+  private stepOverLedge(a: Actor): void {
+    const m = a.body.getMass();
+    if (Math.abs(a.ropeX) < 0.3 * m * PHYS.gravity) return; // dây không kéo ngang đủ mạnh
+    const p = a.body.getPosition();
+    const half = PLAYER_SIZE / 2;
+    const dir = Math.sign(a.ropeX);
+    const px = p.x + dir * (half + 0.05); // ngay sát cạnh thân, phía bị kéo
+    const feet = p.y + half;
+    if (!this.solidAt(px, feet - 0.02)) return; // không có vách cạnh chân
+    let top = Math.floor(feet - 0.02); // hàng ô chứa điểm đó → mép trên của nó
+    while (this.solidAt(px, top - 0.5)) top -= 1; // leo lên tới đỉnh vách
+    const h = feet - top;
+    if (h <= 0 || h > PHYS.stepUp) return;
+    const v = a.body.getLinearVelocity();
+    const vy = -Math.sqrt(2 * PHYS.gravity * (h + 0.05));
+    if (v.y > vy) a.body.setLinearVelocity(new Vec2(v.x, vy));
+  }
+
+  private solidAt(x: number, y: number): boolean {
+    return this.level.solids.some((r) => x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h);
   }
 
   /**
@@ -268,7 +319,7 @@ export class GameEngine {
     const dir = Math.sign(a.ropeX);
     const outer = p.x + dir * (PLAYER_SIZE / 2 - 0.02); // mép ngoài của thân theo hướng bị kéo
     const below = p.y + PLAYER_SIZE / 2 + 0.05; // ngay dưới chân
-    return !this.level.solids.some((r) => outer > r.x && outer < r.x + r.w && below > r.y && below < r.y + r.h);
+    return !this.solidAt(outer, below);
   }
 
   private checkRules(): void {

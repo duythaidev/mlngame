@@ -33,11 +33,11 @@ const RAW: Record<string, { name: string; rows: string[] }> = {
       "#.............................K........#",
       "#...........................####.......#",
       "#................................DDDDD.#",
-      "#.S................XX............DDDDD.#",
-      "###########...##########################",
-      "###########...##########################",
-      "###########...##########################",
-      "###########...##########################",
+      "#.S...................X..........DDDDD.#",
+      "###########..###########################",
+      "###########..###########################",
+      "###########..###########################",
+      "###########..###########################",
     ],
   },
 };
@@ -80,8 +80,17 @@ function parse(id: string, name: string, rows: string[]): Level {
     }
   }
 
+  // gộp các hàng đặc giống nhau (cùng x, cùng độ rộng, nằm liền nhau) thành một khối:
+  // vách không còn khe nối giữa các hàng → nhân vật trượt dọc vách không bị mắc (ghost collision)
+  const merged: Rect[] = [];
+  for (const r of solids) {
+    const above = merged.find((m) => m.x === r.x && m.w === r.w && m.y + m.h === r.y);
+    if (above) above.h += 1;
+    else merged.push({ ...r });
+  }
+
   const door = dx1 >= 0 ? { x: dx0, y: dy0, w: dx1 - dx0 + 1, h: dy1 - dy0 + 1 } : null;
-  return { id, name, w, h, solids, spikes, key, door, spawn };
+  return { id, name, w, h, solids: merged, spikes, key, door, spawn };
 }
 
 const LEVELS: Record<string, Level> = Object.fromEntries(
