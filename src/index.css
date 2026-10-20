@@ -1,27 +1,487 @@
+/* src/index.css - Light Mode Patriotic Retro Arcade Design System */
+
 :root {
-  --orange: #ff8a50;
-  --ink: #2b2b2b;
-  --bg: #fffdf9;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --bg: #FAF7F0;
+  --bg-subtle: #F3EEDF;
+  --card: #FFFFFF;
+  --red-primary: #D32F2F;
+  --red-dark: #9A0007;
+  --red-light: #FFEBEE;
+  --gold-star: #FBC02D;
+  --gold-dark: #C49000;
+  --gold-light: #FFF9C4;
+  --gold-amber: #FFF8E1;
+  --ink: #1F1A17;
+  --ink-light: #4A3E38;
+  --muted: #75675D;
+  --border: #2C1E18;
+  --border-red: #B71C1C;
+  --shadow-pixel: 4px 4px 0px #2C1E18;
+  --shadow-pixel-sm: 2px 2px 0px #2C1E18;
+  --shadow-pixel-red: 4px 4px 0px #9A0007;
+  --shadow-pixel-gold: 4px 4px 0px #C49000;
+  --font-title: "Oswald", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg);
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(251, 192, 45, 0.15) 0%, transparent 60%),
+    linear-gradient(rgba(44, 30, 24, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(44, 30, 24, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 20px 20px, 20px 20px;
   color: var(--ink);
-  background: var(--bg);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
-* { box-sizing: border-box; }
-body { margin: 0; }
-.page { max-width: 880px; margin: 0 auto; padding: 24px 16px 64px; }
-h1 { color: var(--orange); letter-spacing: 1px; margin: 0 0 16px; }
-.card { border: 2px solid var(--ink); border-radius: 10px; padding: 14px; margin: 12px 0; background: #fff; }
-.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.btn { background: var(--orange); color: #fff; border: 2px solid var(--ink); border-radius: 8px; padding: 8px 14px; font-weight: 700; cursor: pointer; }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
-.btn.ghost { background: #fff; color: var(--ink); }
+
+/* Page Layout */
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px 16px 64px;
+}
+
+/* Patriotic Top Ribbon */
+.top-ribbon {
+  background: linear-gradient(90deg, #B71C1C 0%, #D32F2F 50%, #B71C1C 100%);
+  color: #FFF9C4;
+  font-family: var(--font-title);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 6px 12px;
+  border-bottom: 2px solid var(--gold-star);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+  font-family: var(--font-title);
+  color: var(--red-primary);
+  margin: 0 0 12px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+h2 {
+  font-size: 20px;
+  margin-top: 24px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Hero Section */
+.hero-card {
+  position: relative;
+  border: 3px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-pixel);
+  margin-bottom: 20px;
+  background: #FFF;
+}
+
+.hero-banner-img {
+  width: 100%;
+  height: auto;
+  max-height: 280px;
+  object-fit: cover;
+  display: block;
+  image-rendering: auto;
+}
+
+.hero-overlay {
+  padding: 14px 18px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FFFDF9 100%);
+  border-top: 3px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hero-title-group h1 {
+  margin: 0;
+  font-size: 26px;
+  color: var(--red-dark);
+}
+
+.hero-subtitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Cards & Containers */
+.card {
+  border: 2.5px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin: 14px 0;
+  background: var(--card);
+  box-shadow: var(--shadow-pixel);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card.highlight {
+  border-color: var(--red-primary);
+  background: #FFFDF8;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Buttons - 3D Retro Pixel Arcade Feel */
+.btn {
+  font-family: var(--font-title);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: var(--red-primary);
+  color: #FFFFFF;
+  border: 2.5px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  box-shadow: var(--shadow-pixel-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.08s ease-in-out;
+  text-decoration: none;
+}
+
+.btn:hover:not(:disabled) {
+  background: #B71C1C;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--border);
+}
+
+.btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px var(--border);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+
+.btn.gold {
+  background: var(--gold-star);
+  color: var(--ink);
+  box-shadow: 2px 2px 0px var(--border);
+}
+
+.btn.gold:hover:not(:disabled) {
+  background: #FFD54F;
+}
+
+.btn.ghost {
+  background: #FFFFFF;
+  color: var(--ink);
+}
+
+.btn.ghost:hover:not(:disabled) {
+  background: var(--bg-subtle);
+}
+
+.btn.sm {
+  font-size: 13px;
+  padding: 5px 10px;
+}
+
+/* Inputs */
 input[type="text"], input[type="email"], input[type="password"], input[type="number"] {
-  padding: 8px 10px; border: 2px solid var(--ink); border-radius: 8px; font-size: 15px;
+  padding: 9px 12px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  background: #FFFFFF;
+  box-shadow: inset 1px 1px 3px rgba(0,0,0,0.06);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.avatar { width: 48px; height: 48px; image-rendering: pixelated; border: 2px solid var(--ink); border-radius: 6px; background: #eee; }
-.slot { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
-.tag { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: #eee; }
-.tag.host { background: var(--orange); color: #fff; }
-.muted { color: #777; font-size: 14px; }
-.err { color: #c0392b; font-weight: 700; }
-canvas { display: block; max-width: 100%; border: 2px solid var(--ink); border-radius: 8px; background: #fff; }
+
+input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, input[type="number"]:focus {
+  border-color: var(--red-primary);
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.2);
+}
+
+/* Avatar Components */
+.avatar {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.avatar-selector-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.preset-avatars-grid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.preset-avatar-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: #FFF;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+  transition: all 0.12s ease;
+}
+
+.preset-avatar-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--red-primary);
+}
+
+.preset-avatar-btn.selected {
+  border-color: var(--red-primary);
+  background: var(--gold-amber);
+  outline: 2px solid var(--gold-star);
+  box-shadow: 3px 3px 0px var(--red-dark);
+}
+
+.preset-avatar-btn .avatar {
+  width: 44px;
+  height: 44px;
+}
+
+.preset-avatar-btn span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Tags & Badges */
+.tag {
+  font-family: var(--font-title);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tag.host {
+  background: var(--gold-star);
+  color: var(--ink);
+  border-color: var(--border);
+}
+
+.tag.playing {
+  background: #FFE082;
+  color: #5D4037;
+}
+
+.tag.waiting {
+  background: #C8E6C9;
+  color: #1B5E20;
+}
+
+.slot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: #FFF;
+  margin-bottom: 8px;
+}
+
+.slot.current-user {
+  background: var(--gold-amber);
+  border-color: var(--gold-dark);
+  box-shadow: 2px 2px 0px var(--border);
+}
+
+/* Arcade Cabinet Machine Frame */
+.arcade-shell {
+  border: 3px solid var(--border);
+  border-radius: 12px;
+  background: #231C18;
+  padding: 10px;
+  box-shadow: var(--shadow-pixel);
+  margin-top: 14px;
+}
+
+.arcade-bezel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  background: linear-gradient(90deg, #8B0000 0%, #D32F2F 50%, #8B0000 100%);
+  border: 2px solid #3E2723;
+  border-radius: 6px 6px 0 0;
+  color: #FFF9C4;
+  font-family: var(--font-title);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.arcade-bezel-lights {
+  display: flex;
+  gap: 6px;
+}
+
+.arcade-bezel-lights span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid #000;
+}
+
+.arcade-bezel-lights span.red { background: #FF5252; box-shadow: 0 0 6px #FF5252; }
+.arcade-bezel-lights span.yellow { background: #FFD700; box-shadow: 0 0 6px #FFD700; }
+.arcade-bezel-lights span.green { background: #69F0AE; box-shadow: 0 0 6px #69F0AE; }
+
+canvas {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  border: 2px solid var(--border);
+  border-radius: 0 0 6px 6px;
+  background: #FFFFFF;
+}
+
+.arcade-controls-guide {
+  background: #181310;
+  border: 2px solid #3E2723;
+  border-radius: 6px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  color: #E0E0E0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.key-pill {
+  display: inline-block;
+  background: #F5F5F5;
+  color: #1A1A1A;
+  border: 1.5px solid #000;
+  border-bottom: 3px solid #000;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 13px;
+  margin: 0 2px;
+}
+
+/* Toast Notifications */
+.toast-badge {
+  background: #2E7D32;
+  color: #FFF;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Room Card (Lobby List) */
+.room-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.room-card:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px var(--border);
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.err {
+  color: var(--red-dark);
+  font-weight: 700;
+  margin: 6px 0;
+  background: var(--red-light);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1.5px solid var(--red-primary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .page { padding: 12px 10px 48px; }
+  .room-card { flex-direction: column; align-items: stretch; text-align: center; }
+  .arcade-controls-guide { flex-direction: column; text-align: center; gap: 8px; }
+}
