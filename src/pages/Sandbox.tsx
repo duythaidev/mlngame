@@ -1,5 +1,7 @@
 // src/pages/Sandbox.tsx
 import { useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
+import badgeStar from "../assets/badge-star.svg";
 import { GameEngine } from "../game/engine";
 import { attachInput, KEYS_ARROWS, KEYS_WASD } from "../game/input";
 import { getLevel } from "../game/level";
@@ -47,9 +49,41 @@ export default function Sandbox() {
 
   return (
     <div className="page">
-      <h1>Sandbox (offline)</h1>
-      <p className="muted">s0: W A D · s1: ← → ↑ · s2 đứng yên · R: chơi lại</p>
-      <canvas ref={canvasRef} width={VIEW_W} height={level.h * TILE} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <h1 style={{ margin: 0 }}>
+          <img src={badgeStar} alt="Star" style={{ width: 28, height: 28 }} />
+          Chế Độ Luyện Tập (Offline Sandbox)
+        </h1>
+        <Link to="/" className="btn ghost sm">← Về Trang Chủ</Link>
+      </div>
+
+      <div className="arcade-shell">
+        <div className="arcade-bezel-header">
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <img src={badgeStar} alt="Star" style={{ width: 16, height: 16 }} />
+            <span>MÁY MÔ PHỎNG VẬT LÝ DÂY THỪNG · 2 NGƯỜI CHƠI LOCAL</span>
+          </div>
+          <div className="arcade-bezel-lights">
+            <span className="red" />
+            <span className="yellow" />
+            <span className="green" />
+          </div>
+        </div>
+
+        <canvas ref={canvasRef} width={VIEW_W} height={level.h * TILE} />
+
+        <div className="arcade-controls-guide">
+          <div>
+            <strong>Người chơi 1 (s0):</strong> <span className="key-pill">W</span> <span className="key-pill">A</span> <span className="key-pill">D</span>
+          </div>
+          <div>
+            <strong>Người chơi 2 (s1):</strong> <span className="key-pill">↑</span> <span className="key-pill">←</span> <span className="key-pill">→</span>
+          </div>
+          <div>
+            <strong>Chơi lại:</strong> Bấm phím <span className="key-pill">R</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

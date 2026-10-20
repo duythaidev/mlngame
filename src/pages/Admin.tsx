@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { signInAnonymously, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import GameCanvas from "../components/GameCanvas";
+import badgeStar from "../assets/badge-star.svg";
 import { auth } from "../lib/firebase";
 import { useDbValue, useRoomList, useUser } from "../lib/hooks";
 import { createRoom, deleteRoom } from "../lib/rooms";
@@ -12,8 +13,29 @@ function Spectate({ id }: { id: string }) {
   const meta = useDbValue<RoomMeta>(`roomList/${id}`);
   const slots = useDbValue<Record<string, SlotInfo>>(`rooms/${id}/slots`);
   if (!meta.value) return null;
-  if (meta.value.phase !== "playing") return <p className="muted">Phòng đang ở sảnh, chưa bắt đầu.</p>;
-  return <GameCanvas roomId={id} levelId={meta.value.level} slots={slots.value ?? {}} mySlot={null} isHost={false} />;
+  if (meta.value.phase !== "playing") {
+    return (
+      <div style={{ marginTop: 12, padding: 12, background: "var(--bg-subtle)", borderRadius: 6, textAlign: "center" }}>
+        <p className="muted" style={{ margin: 0 }}>Phòng này đang ở sảnh chờ, chưa bước vào thi đấu.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="arcade-shell" style={{ marginTop: 14 }}>
+      <div className="arcade-bezel-header">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <img src={badgeStar} alt="Star" style={{ width: 16, height: 16 }} />
+          <span>GIÁM SÁT TRỰC TIẾP · PHÒNG #{id.slice(-6)}</span>
+        </div>
+        <div className="arcade-bezel-lights">
+          <span className="red" />
+          <span className="yellow" />
+          <span className="green" />
+        </div>
+      </div>
+      <GameCanvas roomId={id} levelId={meta.value.level} slots={slots.value ?? {}} mySlot={null} isHost={false} />
+    </div>
+  );
 }
 
 export default function Admin() {
@@ -47,7 +69,7 @@ export default function Admin() {
   async function create(e: FormEvent) {
     e.preventDefault();
     try {
-      await createRoom(name.trim() || `Phòng ${rooms.length + 1}`, max);
+      await createRoom(name.trim() || `Tổ thi đua ${rooms.length + 1}`, max);
       setName("");
       setError("");
     } catch (err) {
@@ -59,98 +81,178 @@ export default function Admin() {
     const url = `${window.location.origin}/room/${roomId}`;
     void navigator.clipboard.writeText(url).then(() => {
       setCopiedId(roomId);
-      setTimeout(() => setCopiedId(null), 2000);
+      setTimeout(() => setCopiedId(null), 2500);
     });
   }
 
-  if (!user) return <div className="page">Đang tải…</div>;
+  if (!user) return <div className="page">Đang kiểm tra tài khoản…</div>;
 
   if (user.isAnonymous) {
     return (
       <div className="page">
-        <h1>Admin</h1>
-        <form className="card row" onSubmit={login}>
-          <input type="email" placeholder="Email admin" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <input type="password" placeholder="Mật khẩu" value={pw} onChange={(e) => setPw(e.target.value)} />
-          <button className="btn" type="submit">Đăng nhập</button>
-        </form>
-        {error && <p className="err">{error}</p>}
-        <Link to="/">← Về trang chủ</Link>
+        <h1>
+          <img src={badgeStar} alt="Star" style={{ width: 26, height: 26 }} />
+          Bàn Quản Trị (Admin)
+        </h1>
+        <div className="card highlight" style={{ maxWidth: 440 }}>
+          <h3 style={{ margin: "0 0 8px", color: "var(--red-dark)" }}>Đăng Nhập Quản Trị Viên</h3>
+          <p className="muted" style={{ margin: "0 0 16px", fontSize: 13 }}>
+            Vui lòng đăng nhập bằng tài khoản quản trị để tạo và giám sát các phòng thi đua.
+          </p>
+
+          <form onSubmit={login} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <input
+              type="email"
+              placeholder="Email quản trị"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              placeholder="Mật khẩu"
+              value={pw}
+              onChange={(e) => setPw(e.target.value)}
+              required
+            />
+            <button className="btn gold" type="submit" style={{ marginTop: 4 }}>
+              Đăng Nhập Admin
+            </button>
+          </form>
+
+          {error && <p className="err">{error}</p>}
+
+          <div style={{ marginTop: 16 }}>
+            <Link to="/" className="btn ghost sm">← Về trang chủ</Link>
+          </div>
+        </div>
       </div>
     );
   }
 
-  if (!isAdmin.ready) return <div className="page">Đang kiểm tra quyền…</div>;
+  if (!isAdmin.ready) return <div className="page">Đang kiểm tra quyền hạn…</div>;
+
   if (isAdmin.value !== true) {
     return (
       <div className="page">
-        <h1>Admin</h1>
-        <p className="err">Tài khoản này chưa phải admin.</p>
-        <p>
-          Vào Realtime Database, tạo <code>admins/{user.uid}</code> = <code>true</code>.
-        </p>
-        <button className="btn ghost" onClick={logout}>Đăng xuất</button>
+        <h1>Bàn Quản Trị</h1>
+        <div className="card">
+          <p className="err">Tài khoản này chưa được cấp quyền quản trị (UID: {user.uid}).</p>
+          <p className="muted">
+            Vui lòng vào Firebase Realtime Database, thêm bản ghi <code>admins/{user.uid}</code> = <code>true</code>.
+          </p>
+          <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+            <button className="btn ghost sm" onClick={logout}>Đăng xuất</button>
+            <Link to="/" className="btn ghost sm">← Về trang chủ</Link>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="page">
-      <h1>Admin</h1>
-      <div className="row" style={{ marginBottom: 16 }}>
-        <button className="btn ghost" onClick={logout}>Đăng xuất</button>
-        <Link to="/" className="btn ghost">← Trang chủ</Link>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+        <h1 style={{ margin: 0 }}>
+          <img src={badgeStar} alt="Star" style={{ width: 28, height: 28 }} />
+          Bàn Quản Trị Thi Đua
+        </h1>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Link to="/" className="btn ghost sm">← Trang Chủ</Link>
+          <button className="btn ghost sm" onClick={logout}>Đăng Xuất</button>
+        </div>
       </div>
 
-      <form className="card row" onSubmit={create}>
-        <input type="text" placeholder="Tên phòng (ví dụ: Team 1 - Alpha)" value={name} onChange={(e) => setName(e.target.value)} />
-        <label>
-          Tối đa{" "}
+      {/* Tạo phòng mới */}
+      <div className="card highlight">
+        <h3 style={{ margin: "0 0 12px", color: "var(--red-dark)" }}>
+          ★ Mở Phòng Thi Đua Mới
+        </h3>
+        <form className="row" onSubmit={create}>
           <input
-            type="number"
-            min={2}
-            max={8}
-            value={max}
-            onChange={(e) => setMax(Math.min(8, Math.max(2, Number(e.target.value) || 2)))}
-          />{" "}
-          người
-        </label>
-        <button className="btn" type="submit">Tạo phòng</button>
-      </form>
-      {error && <p className="err">{error}</p>}
+            type="text"
+            placeholder="Tên phòng (ví dụ: Đội 1 - Sao Vàng)"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={{ flex: 1, minWidth: 220 }}
+          />
+          <label style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, fontSize: 14 }}>
+            Tối đa:
+            <input
+              type="number"
+              min={2}
+              max={8}
+              value={max}
+              onChange={(e) => setMax(Math.min(8, Math.max(2, Number(e.target.value) || 2)))}
+              style={{ width: 64 }}
+            />
+            người
+          </label>
+          <button className="btn gold" type="submit">
+            + Tạo Phòng
+          </button>
+        </form>
+        {error && <p className="err">{error}</p>}
+      </div>
 
-      <h2>Các phòng ({rooms.length})</h2>
-      {rooms.map((r) => {
-        const names = Object.values(r.players ?? {});
-        return (
-          <div className="card" key={r.id}>
-            <div className="row">
-              <strong style={{ minWidth: 160 }}>{r.name}</strong>
-              <span className="tag">{names.length}/{r.max} người</span>
-              <span className="tag">{r.phase === "playing" ? "Đang chơi" : "Sảnh"}</span>
-              <button className="btn ghost" onClick={() => copyRoomLink(r.id)}>
-                {copiedId === r.id ? "Đã copy link!" : "Copy link"}
-              </button>
-              <button className="btn ghost" onClick={() => setWatch(watch === r.id ? null : r.id)}>
-                {watch === r.id ? "Ẩn" : "Xem"}
-              </button>
-              <button
-                className="btn ghost"
-                onClick={() => {
-                  if (watch === r.id) setWatch(null);
-                  void deleteRoom(r.id);
-                }}
-              >
-                Xóa
-              </button>
+      {/* Danh sách phòng */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 24, marginBottom: 8 }}>
+        <h2 style={{ margin: 0 }}>
+          ★ Các Phòng Đang Hoạt Động ({rooms.length})
+        </h2>
+      </div>
+
+      {rooms.length === 0 ? (
+        <div className="card" style={{ textAlign: "center", padding: 24 }}>
+          <p className="muted">Chưa có phòng nào. Hãy tạo phòng thi đua đầu tiên ở trên.</p>
+        </div>
+      ) : (
+        rooms.map((r) => {
+          const names = Object.values(r.players ?? {});
+          const isWatching = watch === r.id;
+          return (
+            <div className="card" key={r.id}>
+              <div className="row" style={{ justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <strong style={{ fontSize: 16 }}>{r.name}</strong>
+                  <span className="tag host">{names.length}/{r.max} người</span>
+                  <span className={`tag ${r.phase === "playing" ? "playing" : "waiting"}`}>
+                    {r.phase === "playing" ? "● Đang chơi" : "○ Sảnh chờ"}
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <button className="btn ghost sm" onClick={() => copyRoomLink(r.id)}>
+                    {copiedId === r.id ? "✓ Đã Chép" : "🔗 Link Mời"}
+                  </button>
+                  <button
+                    className={`btn sm ${isWatching ? "gold" : "ghost"}`}
+                    onClick={() => setWatch(isWatching ? null : r.id)}
+                  >
+                    {isWatching ? "Ẩn Màn Hình" : "👁 Giám Sát"}
+                  </button>
+                  <button
+                    className="btn ghost sm"
+                    onClick={() => {
+                      if (watch === r.id) setWatch(null);
+                      void deleteRoom(r.id);
+                    }}
+                    style={{ color: "var(--red-dark)" }}
+                  >
+                    Xóa
+                  </button>
+                </div>
+              </div>
+
+              <div className="muted" style={{ marginTop: 8, fontSize: 13 }}>
+                <strong>Thành viên:</strong> {names.length ? names.join(", ") : "(chưa có người vào)"}
+              </div>
+
+              {isWatching && <Spectate id={r.id} />}
             </div>
-            <div className="muted" style={{ marginTop: 6 }}>
-              Thành viên: {names.length ? names.join(", ") : "(chưa có ai)"}
-            </div>
-            {watch === r.id && <Spectate id={r.id} />}
-          </div>
-        );
-      })}
+          );
+        })
+      )}
     </div>
   );
 }
