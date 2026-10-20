@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" shape-rendering="crispEdges">
+  <!-- Background Light Ivory -->
+  <rect width="64" height="64" fill="#FDFBF7"/>
+
+  <!-- Pixel Worker Character -->
+  <!-- Hardhat Brim & Dome (Yellow) -->
+  <rect x="20" y="8" width="24" height="14" fill="#FBC02D"/>
+  <rect x="24" y="6" width="16" height="4" fill="#FFF176"/>
+  <rect x="14" y="20" width="36" height="4" fill="#F57F17"/>
+  <rect x="16" y="21" width="32" height="2" fill="#FBC02D"/>
+  <!-- Hardhat Ridge Highlight -->
+  <rect x="30" y="8" width="4" height="12" fill="#FFF9C4"/>
+
+  <!-- Face Skin Tone -->
+  <rect x="20" y="24" width="24" height="20" fill="#FFCC80"/>
+  <rect x="18" y="28" width="2" height="8" fill="#FFA726"/> <!-- Left ear -->
+  <rect x="44" y="28" width="2" height="8" fill="#FFA726"/> <!-- Right ear -->
+  <rect x="22" y="34" width="4" height="3" fill="#FF8A80"/> <!-- Left blush -->
+  <rect x="38" y="34" width="4" height="3" fill="#FF8A80"/> <!-- Right blush -->
+
+  <!-- Eyes & Eyebrows -->
+  <rect x="22" y="26" width="6" height="2" fill="#3E2723"/> <!-- Left brow -->
+  <rect x="36" y="26" width="6" height="2" fill="#3E2723"/> <!-- Right brow -->
+  <rect x="24" y="29" width="4" height="5" fill="#212121"/> <!-- Left eye -->
+  <rect x="36" y="29" width="4" height="5" fill="#212121"/> <!-- Right eye -->
+  <rect x="25" y="30" width="2" height="2" fill="#FFFFFF"/> <!-- Eye sparkle -->
+  <rect x="37" y="30" width="2" height="2" fill="#FFFFFF"/> <!-- Eye sparkle -->
+
+  <!-- Nose & Smile -->
+  <rect x="31" y="34" width="2" height="3" fill="#FB8C00"/>
+  <rect x="28" y="39" width="8" height="2" fill="#BF360C"/>
+  <rect x="30" y="41" width="4" height="1" fill="#FFFFFF"/>
+
+  <!-- Neck -->
+  <rect x="28" y="44" width="8" height="4" fill="#FFA726"/>
+
+  <!-- Shoulders & Blue Overalls -->
+  <rect x="12" y="48" width="40" height="16" fill="#1565C0"/>
+  <rect x="16" y="46" width="32" height="4" fill="#1E88E5"/>
+  <!-- Red Worker Undershirt Collar -->
+  <polygon points="28,48 36,48 32,54" fill="#C62828"/>
+  <!-- Suspenders / Buckles -->
+  <rect x="20" y="52" width="4" height="12" fill="#0D47A1"/>
+  <rect x="40" y="52" width="4" height="12" fill="#0D47A1"/>
+  <rect x="20" y="54" width="4" height="3" fill="#FFD54F"/>
+  <rect x="40" y="54" width="4" height="3" fill="#FFD54F"/>
+
+  <!-- Crisp Pixel Outline -->
+  <path d="M20,8 h24 v12 h10 v4 h-4 v18 h4 v4 h4 v18 h-48 v-18 h4 v-4 h4 v-18 h-4 v-4 h10 v-12 z" fill="none" stroke="#2C1E18" stroke-width="2"/>
+</svg>

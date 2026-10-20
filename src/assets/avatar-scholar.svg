@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" shape-rendering="crispEdges">
+  <!-- Background Light Ivory -->
+  <rect width="64" height="64" fill="#FDFBF7"/>
+
+  <!-- Hair (Neat dark brown / black pixel hair with part) -->
+  <rect x="18" y="10" width="28" height="14" fill="#212121"/>
+  <rect x="16" y="14" width="32" height="12" fill="#212121"/>
+  <rect x="24" y="8" width="16" height="4" fill="#424242"/>
+  <rect x="14" y="18" width="4" height="10" fill="#212121"/>
+  <rect x="46" y="18" width="4" height="10" fill="#212121"/>
+
+  <!-- Face Skin Tone -->
+  <rect x="20" y="22" width="24" height="22" fill="#FFE0B2"/>
+  <rect x="16" y="26" width="4" height="8" fill="#FFCC80"/> <!-- Left ear -->
+  <rect x="44" y="26" width="4" height="8" fill="#FFCC80"/> <!-- Right ear -->
+  <rect x="22" y="34" width="4" height="3" fill="#FFAB91"/> <!-- Left blush -->
+  <rect x="38" y="34" width="4" height="3" fill="#FFAB91"/> <!-- Right blush -->
+
+  <!-- Glasses (Red/Tortoise Retro Intellectual Frame) -->
+  <!-- Left Rim -->
+  <rect x="21" y="26" width="9" height="8" fill="#B71C1C"/>
+  <rect x="23" y="28" width="5" height="4" fill="#E0F7FA"/>
+  <!-- Right Rim -->
+  <rect x="34" y="26" width="9" height="8" fill="#B71C1C"/>
+  <rect x="36" y="28" width="5" height="4" fill="#E0F7FA"/>
+  <!-- Bridge & Temples -->
+  <rect x="30" y="28" width="4" height="2" fill="#B71C1C"/>
+  <rect x="18" y="28" width="3" height="2" fill="#B71C1C"/>
+  <rect x="43" y="28" width="3" height="2" fill="#B71C1C"/>
+
+  <!-- Eyes behind glass reflection -->
+  <rect x="25" y="29" width="3" height="3" fill="#212121"/>
+  <rect x="37" y="29" width="3" height="3" fill="#212121"/>
+  <rect x="24" y="28" width="2" height="2" fill="#FFFFFF"/>
+  <rect x="36" y="28" width="2" height="2" fill="#FFFFFF"/>
+
+  <!-- Smile & Nose -->
+  <rect x="31" y="34" width="2" height="2" fill="#FFA726"/>
+  <rect x="28" y="38" width="8" height="2" fill="#C62828"/>
+  <rect x="30" y="40" width="4" height="1" fill="#FFFFFF"/>
+
+  <!-- Neck -->
+  <rect x="28" y="44" width="8" height="4" fill="#FFCC80"/>
+
+  <!-- White Shirt & Red Tie / Youth Badge -->
+  <rect x="12" y="48" width="40" height="16" fill="#ECEFF1"/>
+  <rect x="18" y="46" width="28" height="4" fill="#FFFFFF"/>
+  <!-- White Collar Lapels -->
+  <polygon points="24,48 30,54 28,48" fill="#CFD8DC"/>
+  <polygon points="40,48 34,54 36,48" fill="#CFD8DC"/>
+  <!-- Red Tie -->
+  <rect x="30" y="48" width="4" height="4" fill="#D32F2F"/>
+  <polygon points="30,52 34,52 35,62 32,64 29,62" fill="#C62828"/>
+  <!-- Star Badge on Pocket -->
+  <rect x="20" y="54" width="4" height="4" fill="#FBC02D"/>
+
+  <!-- Crisp Pixel Outline -->
+  <path d="M18,10 h28 v6 h6 v12 h-4 v16 h14 v16 h-48 v-16 h14 v-16 h-4 v-12 h6 v-6 z" fill="none" stroke="#2C1E18" stroke-width="2"/>
+</svg>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" shape-rendering="crispEdges">
+  <!-- Ribbon Backing -->
+  <rect x="22" y="36" width="8" height="24" fill="#B71C1C"/>
+  <rect x="34" y="36" width="8" height="24" fill="#B71C1C"/>
+  <rect x="24" y="38" width="4" height="18" fill="#D32F2F"/>
+  <rect x="36" y="38" width="4" height="18" fill="#D32F2F"/>
+  <!-- Ribbon Tails cut -->
+  <polygon points="22,60 26,54 30,60" fill="#1F1A17" opacity="0.3"/>
+  <polygon points="34,60 38,54 42,60" fill="#1F1A17" opacity="0.3"/>
+
+  <!-- Badge Circle Outer Gold -->
+  <rect x="18" y="6" width="28" height="36" fill="#F57F17"/>
+  <rect x="14" y="10" width="36" height="28" fill="#F57F17"/>
+  <rect x="16" y="8" width="32" height="32" fill="#FBC02D"/>
+
+  <!-- Inner Red Disc -->
+  <rect x="20" y="12" width="24" height="24" fill="#C62828"/>
+  <rect x="22" y="10" width="20" height="28" fill="#C62828"/>
+  <rect x="18" y="14" width="28" height="20" fill="#C62828"/>
+  <rect x="22" y="12" width="20" height="24" fill="#D32F2F"/>
+
+  <!-- Pixel Five-Point Star -->
+  <!-- Center & Vertical Peak -->
+  <rect x="30" y="15" width="4" height="5" fill="#FFF59D"/>
+  <rect x="29" y="20" width="6" height="5" fill="#FFEE58"/>
+  <rect x="28" y="23" width="8" height="4" fill="#FDD835"/>
+  <!-- Left / Right Arms -->
+  <rect x="21" y="21" width="22" height="3" fill="#FFF59D"/>
+  <rect x="23" y="24" width="18" height="2" fill="#FDD835"/>
+  <!-- Lower Legs -->
+  <rect x="25" y="27" width="5" height="4" fill="#FDD835"/>
+  <rect x="34" y="27" width="5" height="4" fill="#FDD835"/>
+  <rect x="24" y="31" width="4" height="3" fill="#FBC02D"/>
+  <rect x="36" y="31" width="4" height="3" fill="#FBC02D"/>
+  
+  <!-- Outer Dark Pixel Border -->
+  <path d="M18,6 h28 v2 h4 v4 h2 v20 h-2 v4 h-4 v2 h-4 v22 h-4 v-4 h-4 v4 h-4 v-22 h-4 v-2 h-4 v-4 h-2 v-20 h2 v-4 h4 v-2 z" fill="none" stroke="#2C1E18" stroke-width="2"/>
+</svg>
