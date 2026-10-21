@@ -14,6 +14,10 @@ export interface DrawState {
   players: DrawPlayer[];
   hasKey: boolean;
   won: boolean;
+  /** Đang "Thua": slot của người gây ra + số giây đã trôi qua kể từ lúc thua (cho hoạt ảnh). */
+  lose?: { slot: string; t: number } | null;
+  levelName?: string;
+  isLastLevel?: boolean;
 }
 
 const C = {
@@ -73,6 +77,32 @@ function drawPlayer(ctx: CanvasRenderingContext2D, p: DrawPlayer): void {
   ctx.font = "bold 11px sans-serif";
   ctx.textAlign = "center";
   ctx.fillText(p.name, x + size / 2, y - 9);
+}
+
+/** Người gây ra thua: rung mạnh rồi yếu dần, nháy đỏ, mắt thành dấu X. */
+function drawLostPlayer(ctx: CanvasRenderingContext2D, p: DrawPlayer, t: number): void {
+  const size = Math.round(PLAYER_SIZE * TILE);
+  const shake = Math.sin(t * 90) * 4 * Math.max(0, 1 - t / PHYS.loseDelay);
+  ctx.save();
+  ctx.translate(shake, 0);
+  drawPlayer(ctx, p);
+  const x = Math.round(p.x * TILE - size / 2);
+  const y = Math.round(p.y * TILE - size / 2);
+  if (Math.floor(t / 0.1) % 2 === 0) {
+    ctx.fillStyle = "rgba(255,40,40,0.6)";
+    ctx.fillRect(x, y - 5, size, size + 5);
+  }
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 2;
+  for (const ex of [x + 8, x + size - 8]) {
+    ctx.beginPath();
+    ctx.moveTo(ex - 3, y + 8);
+    ctx.lineTo(ex + 3, y + 16);
+    ctx.moveTo(ex + 3, y + 8);
+    ctx.lineTo(ex - 3, y + 16);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 function drawRope(ctx: CanvasRenderingContext2D, a: DrawPlayer, b: DrawPlayer): void {
@@ -162,7 +192,10 @@ export function drawFrame(ctx: CanvasRenderingContext2D, level: Level, s: DrawSt
 
   // dây (vẽ trước người chơi để người chơi đè lên)
   for (let i = 0; i < players.length - 1; i++) drawRope(ctx, players[i], players[i + 1]);
-  for (const p of players) drawPlayer(ctx, p);
+  for (const p of players) {
+    if (s.lose && p.slot === s.lose.slot) drawLostPlayer(ctx, p, s.lose.t);
+    else drawPlayer(ctx, p);
+  }
 
   ctx.restore();
 
@@ -171,6 +204,10 @@ export function drawFrame(ctx: CanvasRenderingContext2D, level: Level, s: DrawSt
   ctx.font = "bold 14px sans-serif";
   ctx.textAlign = "left";
   ctx.fillText(s.hasKey ? "Đã có chìa khóa — cả nhóm vào cửa!" : "Tìm chìa khóa", 10, 20);
+  if (s.levelName) {
+    ctx.textAlign = "right";
+    ctx.fillText(s.levelName, W - 10, 20);
+  }
 
   if (s.won) {
     ctx.fillStyle = "rgba(255,255,255,0.85)";
@@ -178,9 +215,35 @@ export function drawFrame(ctx: CanvasRenderingContext2D, level: Level, s: DrawSt
     ctx.fillStyle = C.solid;
     ctx.font = "bold 32px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("CẢ NHÓM ĐÃ VỀ ĐÍCH!", W / 2, H / 2 - 6);
+    ctx.fillText(s.isLastLevel ? "ĐÃ HOÀN THÀNH TẤT CẢ LEVEL!" : "HOÀN THÀNH LEVEL!", W / 2, H / 2 - 6);
     ctx.fillStyle = C.ink;
     ctx.font = "16px sans-serif";
-    ctx.fillText("Host bấm R để chơi lại", W / 2, H / 2 + 24);
+    ctx.fillText(s.isLastLevel ? "Host bấm R để chơi lại từ Level 1" : "Tự động sang level tiếp theo…", W / 2, H / 2 + 24);
   }
+
+  if (s.lose) drawLoseOverlay(ctx, W, H, s.lose.t);
+}
+
+/** "THUA!": nền đỏ mờ dần hiện, chữ bật to rồi thu về đúng cỡ trong 0.25 giây. */
+function drawLoseOverlay(ctx: CanvasRenderingContext2D, W: number, H: number, t: number): void {
+  ctx.fillStyle = `rgba(211,47,47,${Math.min(0.35, t * 1.4)})`;
+  ctx.fillRect(0, 0, W, H);
+
+  const pop = 1 + Math.max(0, 1 - t / 0.25) * 1.2;
+  ctx.save();
+  ctx.translate(W / 2, H / 2);
+  ctx.scale(pop, pop);
+  ctx.textAlign = "center";
+  ctx.font = "bold 72px sans-serif";
+  ctx.lineWidth = 8;
+  ctx.strokeStyle = "#fff";
+  ctx.strokeText("THUA!", 0, 12);
+  ctx.fillStyle = "#c62828";
+  ctx.fillText("THUA!", 0, 12);
+  ctx.restore();
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 16px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("Cả nhóm sẽ quay lại điểm xuất phát…", W / 2, H / 2 + 56);
 }

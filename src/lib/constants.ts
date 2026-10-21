@@ -43,6 +43,8 @@ export const PHYS = {
   stepUp: 0.5, // người bị dây kéo vào vách tự bước qua mép nếu mép cao hơn chân tối đa chừng này (ô)
   ropeSlop: 0.03, // dây giãn tới mức này mới bắt đầu kéo về (tránh rung/nảy khi tì vào tường)
   ropeIters: 4, // số vòng giải ràng buộc dây mỗi bước (chuỗi dài cần nhiều hơn)
+  loseDelay: 1, // giây hiển thị "Thua" (đóng băng) trước khi restart cả nhóm
+  winDelay: 3, // giây hiện "Hoàn thành" trước khi tự sang level kế
   step: 1 / 60, // bước vật lý cố định
   snapshotEvery: 3, // cứ 3 bước ghi 1 snapshot → 20Hz
 } as const;
