@@ -3,6 +3,7 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ref, set } from "firebase/database";
 import GameCanvas from "../components/GameCanvas";
+import TouchControls from "../components/TouchControls";
 import badgeStar from "../assets/badge-star.svg";
 import { db } from "../lib/firebase";
 import { PRESET_AVATARS, SLOT_COLORS } from "../lib/constants";
@@ -330,6 +331,7 @@ export default function Room() {
           ) : (
             <GameCanvas roomId={id} levelId={m.level} slots={slots} mySlot={mySlot} isHost={isHost} />
           )}
+          {mySlot !== null && <TouchControls showRestart={isHost} />}
 
           <div className="arcade-controls-guide">
             <div>

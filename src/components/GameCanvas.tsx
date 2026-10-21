@@ -7,13 +7,12 @@ import type { SlotInfo } from "../lib/types";
 import { GameEngine } from "../game/engine";
 import { attachInput } from "../game/input";
 import { getLevel, LEVEL_IDS, nextLevelId } from "../game/level";
-import { EMPTY_INPUT, type InputState, type Snapshot } from "../game/protocol";
+import type { InputState, Snapshot } from "../game/protocol";
 import { drawFrame, drawMessage, type DrawPlayer } from "../game/renderer";
 import { playSound, preloadSounds } from "../lib/sound";
 import { changeKey, decodeSnapshot, encodeSnapshot } from "../net/codec";
-import { extrapolate } from "../net/extrapolate";
 import { NetStats } from "../net/netStats";
-import { predictSelf } from "../net/selfPredict";
+import { SnapshotBuffer } from "../net/interpolate";
 import { StateSender } from "../net/stateSender";
 
 interface Props {
@@ -55,10 +54,7 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
       : null;
     let snap: Snapshot | null = null; // snapshot nhận được (client)
     let isOutdated = false;
-    const shown: Record<string, [number, number]> = {}; // vị trí đang hiển thị (đã làm mượt)
-    let lastR = -1;
-
-    let receivedAt = performance.now();
+    const buffer = new SnapshotBuffer(100); // client: vẽ trễ 100 ms, trượt mượt giữa các snapshot
     if (engine) {
       // host: nghe input của người khác
       unsubs.push(
@@ -78,6 +74,7 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
         if (e.code !== "KeyR" || !engine.won) return;
         if (nextLevelId(engine.levelId)) engine.restart();
         else engine.setLevel(getLevel(LEVEL_IDS[0])); // hết level cuối: chơi lại từ Level 1
+        levelStartTick = engine.tick;
       };
       window.addEventListener("keydown", onKey);
       unsubs.push(() => window.removeEventListener("keydown", onKey));
@@ -86,7 +83,6 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
       unsubs.push(
         onValue(ref(db, `rooms/${roomId}/state`), (s) => {
           stats.countRecv();
-          receivedAt = performance.now();
           const raw = s.val();
           if (raw !== null && raw !== undefined) {
             const decoded = decodeSnapshot(raw);
@@ -96,6 +92,7 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
             } else {
               isOutdated = false;
               snap = decoded;
+              buffer.push(decoded, performance.now());
               if (snap.a && mySlot && typeof snap.a[mySlot] === "number") {
                 stats.markAcked(snap.a[mySlot], performance.now());
               }
@@ -108,8 +105,8 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
     }
 
     let seq = 0;
-    let myInput: InputState = EMPTY_INPUT; // phím mình đang giữ (để dự đoán nhân vật của mình)
-    let jumpSeq = 0; // seq của lần bấm nhảy gần nhất
+    let levelStartTick = 0; // host: tick lúc bắt đầu level hiện tại (để tính thời gian hoàn thành)
+    let wonBefore = false;
     if (mySlot) {
       unsubs.push(
         attachInput((i) => {
@@ -117,8 +114,6 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
             engine.setInput(mySlot, i);
           } else {
             seq++;
-            if (i.j === 1 && myInput.j === 0) jumpSeq = seq;
-            myInput = i;
             stats.markSent(seq, performance.now());
             stats.countSend();
             void set(ref(db, `rooms/${roomId}/inputs/${mySlot}`), { ...i, q: seq }).catch(console.error);
@@ -167,12 +162,19 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
       let cur: Snapshot | null;
       if (engine && sender) {
         engine.update(dt);
+        // vừa thắng → ghi thời gian hoàn thành level cho admin (1 lần ghi, không stream)
+        if (engine.won && !wonBefore) {
+          const secs = Math.round(((engine.tick - levelStartTick) / 60) * 10) / 10;
+          void set(ref(db, `roomList/${roomId}/results/${engine.levelId}`), secs).catch(console.error);
+        }
+        wonBefore = engine.won;
         // tự qua level kế sau winDelay giây (level cuối thì chờ host bấm R)
         if (engine.won) {
           winSince ??= now;
           const next = nextLevelId(engine.levelId);
           if (next && now - winSince >= PHYS.winDelay * 1000) {
             engine.setLevel(getLevel(next));
+            levelStartTick = engine.tick;
             winSince = null;
           }
         } else {
@@ -193,42 +195,14 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
         const frameLevel = getLevel(cur.lv ?? levelId);
         const sorted = Object.keys(cur.p ?? {}).sort();
         const d = cur.d ?? 0;
-        const ageSec = (now - receivedAt) / 1000;
+        // host vẽ thẳng từ engine; client/admin vẽ vị trí nội suy (không đoán trước → không giật lùi)
+        const interp = engine ? null : buffer.positions(now);
         const players: DrawPlayer[] = [];
         for (const [slot, pos] of Object.entries(cur.p ?? {})) {
-          const px = pos[0] / 100;
-          const py = pos[1] / 100;
-          const prev = shown[slot];
-          if (!prev || engine || cur.r !== lastR || d === 1) {
-            shown[slot] = [px, py]; // host / vừa reset / mới xuất hiện / đang Thua: đặt thẳng
-          } else if (slot === mySlot) {
-            // nhân vật của mình: vẽ ở chỗ host SẼ đặt khi nhận input → bấm là thấy chạy ngay
-            const vRaw = cur.v?.[slot] ?? [0, 0];
-            const acked = cur.a?.[slot] ?? 0;
-            const inputDelay = (stats.summary(now).p50 || 150) / 1000;
-            const [targetX, targetY] = predictSelf({
-              pos: [px, py],
-              vel: [vRaw[0] / 100, vRaw[1] / 100],
-              input: myInput,
-              jumpPending: jumpSeq > acked,
-              lookahead: ageSec + inputDelay,
-              level: frameLevel,
-            });
-            shown[slot] = [prev[0] + (targetX - prev[0]) * 0.5, prev[1] + (targetY - prev[1]) * 0.5];
-          } else {
-            const vRaw = cur.v?.[slot] ?? [0, 0];
-            const vx = vRaw[0] / 100;
-            const vy = vRaw[1] / 100;
-            const [targetX, targetY] = extrapolate([px, py], [vx, vy], ageSec);
-            shown[slot] = [
-              prev[0] + (targetX - prev[0]) * 0.6,
-              prev[1] + (targetY - prev[1]) * 0.6,
-            ];
-          }
+          const [x, y] = interp?.[slot] ?? [pos[0] / 100, pos[1] / 100];
           const info = slotsRef.current[slot];
-          players.push({ slot, x: shown[slot][0], y: shown[slot][1], name: info?.name ?? slot, avatar: info?.avatar });
+          players.push({ slot, x, y, name: info?.name ?? slot, avatar: info?.avatar });
         }
-        lastR = cur.r;
 
         // "Thua": phát tiếng đúng lúc chuyển sang trạng thái thua; thời gian hoạt ảnh lấy từ engine (host) hoặc đồng hồ cục bộ
         if (d === 1 && lastD === 0) {

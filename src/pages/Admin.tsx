@@ -2,40 +2,16 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { signInAnonymously, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import GameCanvas from "../components/GameCanvas";
 import badgeStar from "../assets/badge-star.svg";
 import { auth } from "../lib/firebase";
 import { useDbValue, useRoomList, useUser } from "../lib/hooks";
+import { LEVEL_IDS, getLevel } from "../game/level";
 import { createRoom, deleteRoom } from "../lib/rooms";
-import type { RoomMeta, SlotInfo } from "../lib/types";
 
-function Spectate({ id }: { id: string }) {
-  const meta = useDbValue<RoomMeta>(`roomList/${id}`);
-  const slots = useDbValue<Record<string, SlotInfo>>(`rooms/${id}/slots`);
-  if (!meta.value) return null;
-  if (meta.value.phase !== "playing") {
-    return (
-      <div style={{ marginTop: 12, padding: 12, background: "var(--bg-subtle)", borderRadius: 6, textAlign: "center" }}>
-        <p className="muted" style={{ margin: 0 }}>Phòng này đang ở sảnh chờ, chưa bước vào thi đấu.</p>
-      </div>
-    );
-  }
-  return (
-    <div className="arcade-shell" style={{ marginTop: 14 }}>
-      <div className="arcade-bezel-header">
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <img src={badgeStar} alt="Star" style={{ width: 16, height: 16 }} />
-          <span>GIÁM SÁT TRỰC TIẾP · PHÒNG #{id.slice(-6)}</span>
-        </div>
-        <div className="arcade-bezel-lights">
-          <span className="red" />
-          <span className="yellow" />
-          <span className="green" />
-        </div>
-      </div>
-      <GameCanvas roomId={id} levelId={meta.value.level} slots={slots.value ?? {}} mySlot={null} isHost={false} />
-    </div>
-  );
+function fmtTime(secs: number): string {
+  const m = Math.floor(secs / 60);
+  const sec = (secs % 60).toFixed(1).padStart(4, "0");
+  return m > 0 ? `${m}:${sec}` : `${sec}s`;
 }
 
 export default function Admin() {
@@ -47,7 +23,6 @@ export default function Admin() {
   const [pw, setPw] = useState("");
   const [name, setName] = useState("");
   const [max, setMax] = useState(4);
-  const [watch, setWatch] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -209,7 +184,6 @@ export default function Admin() {
       ) : (
         rooms.map((r) => {
           const names = Object.values(r.players ?? {});
-          const isWatching = watch === r.id;
           return (
             <div className="card" key={r.id}>
               <div className="row" style={{ justifyContent: "space-between" }}>
@@ -226,17 +200,8 @@ export default function Admin() {
                     {copiedId === r.id ? "✓ Đã Chép" : "🔗 Link Mời"}
                   </button>
                   <button
-                    className={`btn sm ${isWatching ? "gold" : "ghost"}`}
-                    onClick={() => setWatch(isWatching ? null : r.id)}
-                  >
-                    {isWatching ? "Ẩn Màn Hình" : "👁 Giám Sát"}
-                  </button>
-                  <button
                     className="btn ghost sm"
-                    onClick={() => {
-                      if (watch === r.id) setWatch(null);
-                      void deleteRoom(r.id);
-                    }}
+                    onClick={() => void deleteRoom(r.id)}
                     style={{ color: "var(--red-dark)" }}
                   >
                     Xóa
@@ -248,7 +213,17 @@ export default function Admin() {
                 <strong>Thành viên:</strong> {names.length ? names.join(", ") : "(chưa có người vào)"}
               </div>
 
-              {isWatching && <Spectate id={r.id} />}
+              <div className="muted" style={{ marginTop: 6, fontSize: 13 }}>
+                <strong>Thời gian hoàn thành:</strong>{" "}
+                {LEVEL_IDS.map((lv) => {
+                  const t = r.results?.[lv];
+                  return (
+                    <span key={lv} className="tag" style={{ marginRight: 6 }}>
+                      {getLevel(lv).name.split(" — ")[0]}: {t !== undefined ? fmtTime(t) : "—"}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
           );
         })

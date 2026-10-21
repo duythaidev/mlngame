@@ -485,3 +485,31 @@ canvas {
   .room-card { flex-direction: column; align-items: stretch; text-align: center; }
   .arcade-controls-guide { flex-direction: column; text-align: center; gap: 8px; }
 }
+
+/* ---- Nút cảm ứng (điện thoại) ---- */
+.touch-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.touch-group { display: flex; gap: 12px; }
+.touch-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  border: 3px solid #212121;
+  background: #fff;
+  color: #212121;
+  font-size: 26px;
+  font-weight: 800;
+  touch-action: none; /* không cuộn/zoom trang khi bấm giữ */
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 4px 0 #212121;
+}
+.touch-btn.wide { width: 120px; font-size: 18px; background: #d32f2f; color: #fff; }
+.touch-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #212121; }
