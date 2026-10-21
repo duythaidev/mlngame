@@ -36,9 +36,9 @@ describe("StateSender", () => {
     s.offer("b", "k1", 1000);
     expect(f.calls).toEqual(["a", "b"]);
   });
-  it("tối đa 1 ghi đang bay; chỉ giữ payload mới nhất", async () => {
+  it("maxInFlight=1: tối đa 1 ghi đang bay; chỉ giữ payload mới nhất", async () => {
     const f = fakeWrite();
-    const s = new StateSender(f.write);
+    const s = new StateSender(f.write, { maxInFlight: 1 });
     s.offer("a", "k1", 0);
     s.offer("b", "k2", 40);
     s.offer("c", "k3", 80);
@@ -47,6 +47,12 @@ describe("StateSender", () => {
     await flush();
     s.offer("d", "k4", 120);
     expect(f.calls).toEqual(["a", "d"]);
+  });
+  it("mặc định gửi gối đầu tối đa 3 ghi chưa ack (không bị khóa theo RTT)", () => {
+    const f = fakeWrite();
+    const s = new StateSender(f.write);
+    for (let i = 0; i < 6; i++) s.offer(`p${i}`, `k${i}`, i * 40);
+    expect(f.calls).toEqual(["p0", "p1", "p2"]);
   });
   it("tôn trọng minIntervalMs", async () => {
     const f = fakeWrite();
@@ -61,7 +67,7 @@ describe("StateSender", () => {
   });
   it("write bị reject vẫn mở khóa", async () => {
     const f = fakeWrite();
-    const s = new StateSender(f.write);
+    const s = new StateSender(f.write, { maxInFlight: 1 });
     s.offer("a", "k1", 0);
     f.fail();
     await flush();

@@ -7,12 +7,13 @@ import type { SlotInfo } from "../lib/types";
 import { GameEngine } from "../game/engine";
 import { attachInput } from "../game/input";
 import { getLevel, LEVEL_IDS, nextLevelId } from "../game/level";
-import type { InputState, Snapshot } from "../game/protocol";
+import { EMPTY_INPUT, type InputState, type Snapshot } from "../game/protocol";
 import { drawFrame, drawMessage, type DrawPlayer } from "../game/renderer";
 import { playSound, preloadSounds } from "../lib/sound";
 import { changeKey, decodeSnapshot, encodeSnapshot } from "../net/codec";
 import { extrapolate } from "../net/extrapolate";
 import { NetStats } from "../net/netStats";
+import { predictSelf } from "../net/selfPredict";
 import { StateSender } from "../net/stateSender";
 
 interface Props {
@@ -107,6 +108,8 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
     }
 
     let seq = 0;
+    let myInput: InputState = EMPTY_INPUT; // phím mình đang giữ (để dự đoán nhân vật của mình)
+    let jumpSeq = 0; // seq của lần bấm nhảy gần nhất
     if (mySlot) {
       unsubs.push(
         attachInput((i) => {
@@ -114,6 +117,8 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
             engine.setInput(mySlot, i);
           } else {
             seq++;
+            if (i.j === 1 && myInput.j === 0) jumpSeq = seq;
+            myInput = i;
             stats.markSent(seq, performance.now());
             stats.countSend();
             void set(ref(db, `rooms/${roomId}/inputs/${mySlot}`), { ...i, q: seq }).catch(console.error);
@@ -196,6 +201,20 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
           const prev = shown[slot];
           if (!prev || engine || cur.r !== lastR || d === 1) {
             shown[slot] = [px, py]; // host / vừa reset / mới xuất hiện / đang Thua: đặt thẳng
+          } else if (slot === mySlot) {
+            // nhân vật của mình: vẽ ở chỗ host SẼ đặt khi nhận input → bấm là thấy chạy ngay
+            const vRaw = cur.v?.[slot] ?? [0, 0];
+            const acked = cur.a?.[slot] ?? 0;
+            const inputDelay = (stats.summary(now).p50 || 150) / 1000;
+            const [targetX, targetY] = predictSelf({
+              pos: [px, py],
+              vel: [vRaw[0] / 100, vRaw[1] / 100],
+              input: myInput,
+              jumpPending: jumpSeq > acked,
+              lookahead: ageSec + inputDelay,
+              level: frameLevel,
+            });
+            shown[slot] = [prev[0] + (targetX - prev[0]) * 0.5, prev[1] + (targetY - prev[1]) * 0.5];
           } else {
             const vRaw = cur.v?.[slot] ?? [0, 0];
             const vx = vRaw[0] / 100;
