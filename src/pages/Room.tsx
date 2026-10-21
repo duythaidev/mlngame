@@ -12,6 +12,7 @@ import { loadProfile, saveProfile } from "../lib/profile";
 import { joinRoom } from "../lib/rooms";
 import { fileToAvatar } from "../lib/avatar";
 import type { Profile, RoomMeta, SlotInfo } from "../lib/types";
+import { dispatchGameEvent } from "../net/gameSync";
 
 export default function Room() {
   const { id = "" } = useParams();
@@ -97,12 +98,17 @@ export default function Room() {
     });
   }
 
-  const setPhase = (phase: "lobby" | "playing") =>
-    void set(ref(db, `roomList/${id}/phase`), phase).catch(console.error);
+  const setPhase = async (phase: "lobby" | "playing") => {
+    if (phase === "playing") {
+      await dispatchGameEvent(id, { type: "start", lv: meta.value?.level ?? "1" });
+    }
+    await set(ref(db, `roomList/${id}/phase`), phase).catch(console.error);
+  };
 
   const slots = slotsQ.value ?? {};
   const keys = Object.keys(slots).sort();
-  const isHost = mySlot !== null && keys[0] === mySlot;
+  const isCoordinator = mySlot !== null && keys[0] === mySlot;
+  const isHost = isCoordinator;
 
   if (error) {
     return (
@@ -329,7 +335,7 @@ export default function Room() {
               <p className="muted">Đang kết nối tín hiệu vào phòng…</p>
             </div>
           ) : (
-            <GameCanvas roomId={id} levelId={m.level} slots={slots} mySlot={mySlot} isHost={isHost} />
+            <GameCanvas roomId={id} levelId={m.level} slots={slots} mySlot={mySlot} isCoordinator={isCoordinator} />
           )}
           {mySlot !== null && <TouchControls showRestart={isHost} />}
 
