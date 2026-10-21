@@ -11,6 +11,7 @@ import type { InputState, Snapshot } from "../game/protocol";
 import { drawFrame, drawMessage, type DrawPlayer } from "../game/renderer";
 import { playSound, preloadSounds } from "../lib/sound";
 import { changeKey, decodeSnapshot, encodeSnapshot } from "../net/codec";
+import { extrapolate } from "../net/extrapolate";
 import { NetStats } from "../net/netStats";
 import { StateSender } from "../net/stateSender";
 
@@ -56,6 +57,7 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
     const shown: Record<string, [number, number]> = {}; // vị trí đang hiển thị (đã làm mượt)
     let lastR = -1;
 
+    let receivedAt = performance.now();
     if (engine) {
       // host: nghe input của người khác
       unsubs.push(
@@ -83,6 +85,7 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
       unsubs.push(
         onValue(ref(db, `rooms/${roomId}/state`), (s) => {
           stats.countRecv();
+          receivedAt = performance.now();
           const raw = s.val();
           if (raw !== null && raw !== undefined) {
             const decoded = decodeSnapshot(raw);
@@ -158,15 +161,24 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
       } else {
         const frameLevel = getLevel(cur.lv ?? levelId);
         const sorted = Object.keys(cur.p ?? {}).sort();
+        const d = cur.d ?? 0;
+        const ageSec = (now - receivedAt) / 1000;
         const players: DrawPlayer[] = [];
         for (const [slot, pos] of Object.entries(cur.p ?? {})) {
-          const tx = pos[0] / 100;
-          const ty = pos[1] / 100;
+          const px = pos[0] / 100;
+          const py = pos[1] / 100;
           const prev = shown[slot];
-          if (!prev || engine || cur.r !== lastR) {
-            shown[slot] = [tx, ty]; // host / vừa reset / mới xuất hiện: đặt thẳng
+          if (!prev || engine || cur.r !== lastR || d === 1) {
+            shown[slot] = [px, py]; // host / vừa reset / mới xuất hiện / đang Thua: đặt thẳng
           } else {
-            shown[slot] = [prev[0] + (tx - prev[0]) * 0.35, prev[1] + (ty - prev[1]) * 0.35];
+            const vRaw = cur.v?.[slot] ?? [0, 0];
+            const vx = vRaw[0] / 100;
+            const vy = vRaw[1] / 100;
+            const [targetX, targetY] = extrapolate([px, py], [vx, vy], ageSec);
+            shown[slot] = [
+              prev[0] + (targetX - prev[0]) * 0.6,
+              prev[1] + (targetY - prev[1]) * 0.6,
+            ];
           }
           const info = slotsRef.current[slot];
           players.push({ slot, x: shown[slot][0], y: shown[slot][1], name: info?.name ?? slot, avatar: info?.avatar });
@@ -174,7 +186,6 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
         lastR = cur.r;
 
         // "Thua": phát tiếng đúng lúc chuyển sang trạng thái thua; thời gian hoạt ảnh lấy từ engine (host) hoặc đồng hồ cục bộ
-        const d = cur.d ?? 0;
         if (d === 1 && lastD === 0) {
           playSound("restart");
           loseStart = now;
