@@ -6,9 +6,11 @@ import { PHYS, TILE, VIEW_W } from "../lib/constants";
 import type { SlotInfo } from "../lib/types";
 import { GameEngine } from "../game/engine";
 import { attachInput } from "../game/input";
-import { getLevel } from "../game/level";
+import { getLevel, LEVEL_IDS, nextLevelId } from "../game/level";
 import type { InputState, Snapshot } from "../game/protocol";
 import { drawFrame, drawMessage, type DrawPlayer } from "../game/renderer";
+import { playSound, preloadSounds } from "../lib/sound";
+import { NetStats } from "../net/netStats";
 
 interface Props {
   roomId: string;
@@ -38,6 +40,8 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
     const H = lv.h * TILE;
 
     const unsubs: Array<() => void> = [];
+    const stats = new NetStats();
+    const showNetStats = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("net");
     const engine = isHost ? new GameEngine(lv, slotKey.split(",").filter(Boolean)) : null;
     let snap: Snapshot | null = null; // snapshot nhận được (client)
     const shown: Record<string, [number, number]> = {}; // vị trí đang hiển thị (đã làm mượt)
@@ -47,15 +51,21 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
       // host: nghe input của người khác
       unsubs.push(
         onValue(ref(db, `rooms/${roomId}/inputs`), (s) => {
-          const all = (s.val() ?? {}) as Record<string, Partial<InputState>>;
+          const all = (s.val() ?? {}) as Record<string, Partial<InputState & { q?: number }>>;
           for (const [slot, v] of Object.entries(all)) {
             if (slot === mySlot) continue; // input của host áp dụng trực tiếp, không qua DB
-            engine.setInput(slot, { l: v.l === 1 ? 1 : 0, r: v.r === 1 ? 1 : 0, j: v.j === 1 ? 1 : 0 });
+            engine.setInput(
+              slot,
+              { l: v.l === 1 ? 1 : 0, r: v.r === 1 ? 1 : 0, j: v.j === 1 ? 1 : 0 },
+              typeof v.q === "number" ? v.q : undefined,
+            );
           }
         }),
       );
       const onKey = (e: KeyboardEvent) => {
-        if (e.code === "KeyR" && engine.won) engine.restart();
+        if (e.code !== "KeyR" || !engine.won) return;
+        if (nextLevelId(engine.levelId)) engine.restart();
+        else engine.setLevel(getLevel(LEVEL_IDS[0])); // hết level cuối: chơi lại từ Level 1
       };
       window.addEventListener("keydown", onKey);
       unsubs.push(() => window.removeEventListener("keydown", onKey));
@@ -63,23 +73,39 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
       // client / admin: nghe snapshot của host
       unsubs.push(
         onValue(ref(db, `rooms/${roomId}/state`), (s) => {
+          stats.countRecv();
           snap = s.val() as Snapshot | null;
+          if (snap?.a && mySlot && typeof snap.a[mySlot] === "number") {
+            stats.markAcked(snap.a[mySlot], performance.now());
+          }
         }),
       );
     }
 
+    let seq = 0;
     if (mySlot) {
       unsubs.push(
         attachInput((i) => {
-          if (engine) engine.setInput(mySlot, i);
-          else void set(ref(db, `rooms/${roomId}/inputs/${mySlot}`), i).catch(console.error);
+          if (engine) {
+            engine.setInput(mySlot, i);
+          } else {
+            seq++;
+            stats.markSent(seq, performance.now());
+            stats.countSend();
+            void set(ref(db, `rooms/${roomId}/inputs/${mySlot}`), { ...i, q: seq }).catch(console.error);
+          }
         }),
       );
     }
 
+    preloadSounds();
     let raf = 0;
     let last = performance.now();
     let sentTick = 0;
+    let winSince: number | null = null; // host: lúc bắt đầu hiện "hoàn thành" (để tự qua màn)
+    let lastD = 0; // trạng thái "Thua" ở frame trước (để phát tiếng đúng 1 lần)
+    let loseStart = 0; // client: lúc nhận thấy bắt đầu "Thua" (host dùng engine.lose.t chính xác hơn)
+    let lastJump: number | null = null; // số lần nhảy của chính mình ở snapshot trước
 
     const frame = (now: number) => {
       const dt = (now - last) / 1000;
@@ -88,9 +114,21 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
       let cur: Snapshot | null;
       if (engine) {
         engine.update(dt);
+        // tự qua level kế sau winDelay giây (level cuối thì chờ host bấm R)
+        if (engine.won) {
+          winSince ??= now;
+          const next = nextLevelId(engine.levelId);
+          if (next && now - winSince >= PHYS.winDelay * 1000) {
+            engine.setLevel(getLevel(next));
+            winSince = null;
+          }
+        } else {
+          winSince = null;
+        }
         cur = engine.snapshot();
         if (engine.tick - sentTick >= PHYS.snapshotEvery) {
           sentTick = engine.tick;
+          stats.countSend();
           void set(ref(db, `rooms/${roomId}/state`), cur).catch(console.error);
         }
       } else {
@@ -100,6 +138,8 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
       if (!cur) {
         drawMessage(ctx, W, H, "Đang chờ host…");
       } else {
+        const frameLevel = getLevel(cur.lv ?? levelId);
+        const sorted = Object.keys(cur.p ?? {}).sort();
         const players: DrawPlayer[] = [];
         for (const [slot, pos] of Object.entries(cur.p ?? {})) {
           const tx = pos[0] / 100;
@@ -114,7 +154,48 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
           players.push({ slot, x: shown[slot][0], y: shown[slot][1], name: info?.name ?? slot, avatar: info?.avatar });
         }
         lastR = cur.r;
-        drawFrame(ctx, lv, { players, hasKey: cur.k === 1, won: cur.w === 1 });
+
+        // "Thua": phát tiếng đúng lúc chuyển sang trạng thái thua; thời gian hoạt ảnh lấy từ engine (host) hoặc đồng hồ cục bộ
+        const d = cur.d ?? 0;
+        if (d === 1 && lastD === 0) {
+          playSound("restart");
+          loseStart = now;
+        }
+        lastD = d;
+        const loseT = engine?.lose ? engine.lose.t : (now - loseStart) / 1000;
+        const loseSlot = d === 1 ? sorted[cur.c ?? -1] : undefined;
+
+        // tiếng nhảy: chỉ của chính mình, khi số lần nhảy thật sự (engine đếm) tăng
+        if (mySlot) {
+          const n = cur.j?.[mySlot];
+          if (n !== undefined) {
+            if (lastJump !== null && n > lastJump) playSound("jump");
+            lastJump = n;
+          }
+        }
+
+        drawFrame(ctx, frameLevel, {
+          players,
+          hasKey: cur.k === 1,
+          won: cur.w === 1,
+          lose: loseSlot ? { slot: loseSlot, t: Math.max(0, loseT) } : null,
+          levelName: frameLevel.name,
+          isLastLevel: nextLevelId(frameLevel.id) === null,
+        });
+
+        if (showNetStats) {
+          const sm = stats.summary(now);
+          ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+          ctx.fillRect(8, H - 28, 380, 22);
+          ctx.fillStyle = "#FFEB3B";
+          ctx.font = "bold 12px monospace";
+          ctx.textAlign = "left";
+          ctx.fillText(
+            `trễ p50 ${sm.p50}ms p95 ${sm.p95}ms · gửi ${sm.sendPerSec}/s · nhận ${sm.recvPerSec}/s`,
+            14,
+            H - 13,
+          );
+        }
       }
       raf = requestAnimationFrame(frame);
     };

@@ -36,23 +36,39 @@ export class GameEngine {
   tick = 0;
   hasKey = false;
   won = false;
+  /** Đang trong khoảng "Thua": t = số giây đã qua, culprit = ô của người chạm gai / rơi hố. */
+  lose: { t: number; culprit: string } | null = null;
+  readonly jumps: Record<string, number> = {};
 
   private level: Level;
   private slots: string[];
   private world!: planck.World;
   private actors: Actor[] = [];
   private inputs = new Map<string, InputState>();
+  private inputSeqs = new Map<string, number>();
   private acc = 0;
   private resetCount = 0;
 
   constructor(level: Level, slots: string[]) {
     this.level = level;
     this.slots = [...slots].sort(); // thứ tự dây = thứ tự ô
+    for (const s of this.slots) this.jumps[s] = 0;
     this.build();
   }
 
-  setInput(slot: string, input: InputState): void {
+  get levelId(): string {
+    return this.level.id;
+  }
+
+  /** Sang level khác (host tự động qua màn): dựng lại thế giới từ đầu. */
+  setLevel(level: Level): void {
+    this.level = level;
+    this.restart();
+  }
+
+  setInput(slot: string, input: InputState, seq?: number): void {
     this.inputs.set(slot, input);
+    if (seq !== undefined) this.inputSeqs.set(slot, seq);
   }
 
   /** Chơi lại từ đầu (chết hoặc bấm R sau khi thắng). */
@@ -60,6 +76,7 @@ export class GameEngine {
     this.resetCount++;
     this.hasKey = false;
     this.won = false;
+    this.lose = null;
     this.acc = 0;
     this.build();
   }
@@ -75,11 +92,27 @@ export class GameEngine {
 
   snapshot(): Snapshot {
     const p: Snapshot["p"] = {};
+    const v: NonNullable<Snapshot["v"]> = {};
     for (const a of this.actors) {
       const pos = a.body.getPosition();
+      const vel = a.body.getLinearVelocity();
       p[a.slot] = [Math.round(pos.x * 100), Math.round(pos.y * 100)];
+      v[a.slot] = [Math.round(vel.x * 100), Math.round(vel.y * 100)];
     }
-    return { t: this.tick, r: this.resetCount, k: this.hasKey ? 1 : 0, w: this.won ? 1 : 0, p };
+    const c = this.lose ? this.slots.indexOf(this.lose.culprit) : -1;
+    return {
+      t: this.tick,
+      r: this.resetCount,
+      k: this.hasKey ? 1 : 0,
+      w: this.won ? 1 : 0,
+      d: this.lose ? 1 : 0,
+      c,
+      lv: this.level.id,
+      j: { ...this.jumps },
+      p,
+      v,
+      a: Object.fromEntries(this.inputSeqs),
+    };
   }
 
   // ---------------------------------------------------------------- nội bộ
@@ -139,6 +172,13 @@ export class GameEngine {
   }
 
   private fixedStep(): void {
+    if (this.lose) {
+      // "Thua": đóng băng vật lý, chờ hết loseDelay rồi restart cả nhóm
+      this.lose.t += PHYS.step;
+      this.tick++; // vẫn tăng để host tiếp tục gửi snapshot (client thấy trạng thái Thua)
+      if (this.lose.t >= PHYS.loseDelay) this.restart();
+      return;
+    }
     this.applyRope(); // dây trước: lực chân (phanh) bù ngay vận tốc dây vừa truyền, không bị trôi dần
     this.drive();
     this.world.step(PHYS.step, 8, 3);
@@ -194,6 +234,7 @@ export class GameEngine {
       if (inp.j === 1 && a.prevJ === 0 && grounded && a.load === 0) {
         body.setLinearVelocity(new Vec2(v.x, -PHYS.jump));
         a.jumped = true;
+        this.jumps[a.slot] = (this.jumps[a.slot] ?? 0) + 1;
       }
       a.prevJ = inp.j;
     }
@@ -324,17 +365,17 @@ export class GameEngine {
 
   private checkRules(): void {
     const { level } = this;
-    let dead = false;
+    let culprit: string | null = null;
     let inDoor = 0;
 
     for (const a of this.actors) {
       const p = a.body.getPosition();
-      if (p.y - PLAYER_SIZE / 2 > level.h) dead = true; // tụt hẳn khỏi đáy map
+      if (p.y - PLAYER_SIZE / 2 > level.h) culprit ??= a.slot; // tụt hẳn khỏi đáy map
 
       const box: Aabb = { x: p.x - 0.35, y: p.y - 0.35, w: 0.7, h: 0.7 };
       for (const s of level.spikes) {
         // mũi gai chỉ ở nửa dưới của ô
-        if (overlap(box, { x: s.x + 0.1, y: s.y + 0.5, w: 0.8, h: 0.5 })) dead = true;
+        if (overlap(box, { x: s.x + 0.1, y: s.y + 0.5, w: 0.8, h: 0.5 })) culprit ??= a.slot;
       }
       if (!this.hasKey && level.key && overlap(box, level.key)) this.hasKey = true;
 
@@ -342,8 +383,8 @@ export class GameEngine {
       if (d && p.x > d.x && p.x < d.x + d.w && p.y > d.y && p.y < d.y + d.h) inDoor++;
     }
 
-    if (dead) {
-      this.restart();
+    if (culprit && !this.won) {
+      this.lose = { t: 0, culprit }; // bắt đầu "Thua": giữ nguyên vị trí 1 giây rồi mới restart
       return;
     }
     if (this.hasKey && this.actors.length > 0 && inDoor === this.actors.length) this.won = true;
