@@ -65,3 +65,91 @@ function toTiles(p: Snapshot["p"]): Record<string, [number, number]> {
   for (const [slot, [x, y]] of Object.entries(p)) out[slot] = [x / 100, y / 100];
   return out;
 }
+
+export interface RemoteSample {
+  ms: number;
+  epoch: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  flags: number;
+}
+
+export class RemoteTrack {
+  private buf: RemoteSample[] = [];
+  private offset: number | null = null;
+  private delayMs: number;
+  private currentEpoch: number | null = null;
+
+  constructor(delayMs = 80) {
+    this.delayMs = delayMs;
+  }
+
+  reset(): void {
+    this.buf = [];
+    this.offset = null;
+    this.currentEpoch = null;
+  }
+
+  push(s: RemoteSample, recvAt: number): void {
+    if (this.currentEpoch === null || s.epoch !== this.currentEpoch) {
+      this.reset();
+      this.currentEpoch = s.epoch;
+    }
+
+    const last = this.buf[this.buf.length - 1];
+    if (last && s.ms <= last.ms) return; // Bỏ qua gói tin cũ/đến trễ
+
+    this.buf.push(s);
+    if (this.buf.length > 32) this.buf.shift();
+
+    const o = recvAt - s.ms;
+    if (this.offset === null || o < this.offset || last === undefined) {
+      this.offset = o;
+    } else {
+      this.offset += (o - this.offset) * 0.02; // Bù trôi đồng hồ từ từ
+    }
+  }
+
+  sample(now: number): { x: number; y: number; vx: number; vy: number; flags: number } | null {
+    const n = this.buf.length;
+    if (n === 0 || this.offset === null) return null;
+
+    const renderMs = now - this.offset - this.delayMs;
+    const a = this.buf[0];
+    const b = this.buf[n - 1];
+
+    if (renderMs <= a.ms) {
+      return { x: a.x, y: a.y, vx: a.vx, vy: a.vy, flags: a.flags };
+    }
+    if (renderMs >= b.ms) {
+      return { x: b.x, y: b.y, vx: b.vx, vy: b.vy, flags: b.flags };
+    }
+
+    let left = a;
+    let right = b;
+    for (let i = 0; i < n - 1; i++) {
+      if (this.buf[i].ms <= renderMs && renderMs <= this.buf[i + 1].ms) {
+        left = this.buf[i];
+        right = this.buf[i + 1];
+        break;
+      }
+    }
+
+    if (left.epoch !== right.epoch) {
+      return { x: right.x, y: right.y, vx: right.vx, vy: right.vy, flags: right.flags };
+    }
+
+    const span = right.ms - left.ms;
+    const k = span > 0 ? (renderMs - left.ms) / span : 0;
+    return {
+      x: left.x + (right.x - left.x) * k,
+      y: left.y + (right.y - left.y) * k,
+      vx: right.vx,
+      vy: right.vy,
+      flags: right.flags,
+    };
+  }
+}
+
