@@ -6,8 +6,15 @@ import { EMPTY_INPUT, type InputState, type Snapshot } from "./protocol";
 
 const { Vec2, Box, World } = planck;
 
+export interface GameEngineOptions {
+  localSlots?: string[];
+  onDied?: (slot: string) => void;
+  onGotKey?: () => void;
+}
+
 interface Actor {
   slot: string;
+  isLocal: boolean;
   body: planck.Body;
   supports: Map<planck.Body, number>; // vật đang đỡ dưới chân -> số điểm chạm
   load: number; // số người đang đứng trên đầu
@@ -42,6 +49,10 @@ export class GameEngine {
 
   private level: Level;
   private slots: string[];
+  private localSlotsSet: Set<string>;
+  private onDiedCallback?: (slot: string) => void;
+  private onGotKeyCallback?: () => void;
+
   private world!: planck.World;
   private actors: Actor[] = [];
   private inputs = new Map<string, InputState>();
@@ -49,11 +60,18 @@ export class GameEngine {
   private acc = 0;
   private resetCount = 0;
 
-  constructor(level: Level, slots: string[]) {
+  constructor(level: Level, slots: string[], options?: GameEngineOptions) {
     this.level = level;
     this.slots = [...slots].sort(); // thứ tự dây = thứ tự ô
+    this.localSlotsSet = new Set(options?.localSlots ?? this.slots);
+    this.onDiedCallback = options?.onDied;
+    this.onGotKeyCallback = options?.onGotKey;
     for (const s of this.slots) this.jumps[s] = 0;
     this.build();
+  }
+
+  isLocal(slot: string): boolean {
+    return this.localSlotsSet.has(slot);
   }
 
   get levelId(): string {
@@ -69,6 +87,47 @@ export class GameEngine {
   setInput(slot: string, input: InputState, seq?: number): void {
     this.inputs.set(slot, input);
     if (seq !== undefined) this.inputSeqs.set(slot, seq);
+  }
+
+  /** Cập nhật vị trí/vận tốc cho actor remote từ gói nội suy. */
+  setRemote(slot: string, x: number, y: number, vx: number, vy: number): void {
+    const a = this.actors.find((act) => act.slot === slot);
+    if (!a || a.isLocal) return;
+    a.body.setPosition(new Vec2(x, y));
+    a.body.setLinearVelocity(new Vec2(vx, vy));
+  }
+
+  setKey(hasKey: boolean): void {
+    this.hasKey = hasKey;
+  }
+
+  freeze(): void {
+    for (const a of this.actors) {
+      if (a.isLocal) a.body.setLinearVelocity(new Vec2(0, 0));
+    }
+  }
+
+  respawn(slots?: string[]): void {
+    if (slots) this.slots = [...slots].sort();
+    this.restart();
+  }
+
+  getLocalPos(slot: string): { x: number; y: number; vx: number; vy: number; grounded: boolean; inDoor: boolean } | null {
+    const a = this.actors.find((act) => act.slot === slot);
+    if (!a) return null;
+    const p = a.body.getPosition();
+    const v = a.body.getLinearVelocity();
+    const grounded = a.supports.size > 0;
+    const d = this.level.door;
+    const inDoor = !!(d && p.x > d.x && p.x < d.x + d.w && p.y > d.y && p.y < d.y + d.h);
+    return {
+      x: Math.round(p.x * 100),
+      y: Math.round(p.y * 100),
+      vx: Math.round(v.x * 100),
+      vy: Math.round(v.y * 100),
+      grounded,
+      inDoor,
+    };
   }
 
   /** Chơi lại từ đầu (chết hoặc bấm R sau khi thắng). */
@@ -130,8 +189,9 @@ export class GameEngine {
 
     const byBody = new Map<planck.Body, Actor>();
     this.actors = this.slots.map((slot, i) => {
+      const isLocal = this.localSlotsSet.has(slot);
       const body = world.createBody({
-        type: "dynamic",
+        type: isLocal ? "dynamic" : "kinematic",
         position: new Vec2(this.level.spawn.x + i, this.level.spawn.y),
         fixedRotation: true,
         allowSleep: false,
@@ -145,7 +205,17 @@ export class GameEngine {
         isSensor: true,
         userData: "foot",
       });
-      const actor: Actor = { slot, body, supports: new Map(), load: 0, ropeX: 0, ropeLift: 0, prevJ: 0, jumped: false };
+      const actor: Actor = {
+        slot,
+        isLocal,
+        body,
+        supports: new Map(),
+        load: 0,
+        ropeX: 0,
+        ropeLift: 0,
+        prevJ: 0,
+        jumped: false,
+      };
       byBody.set(body, actor);
       return actor;
     });
@@ -173,10 +243,11 @@ export class GameEngine {
 
   private fixedStep(): void {
     if (this.lose) {
-      // "Thua": đóng băng vật lý, chờ hết loseDelay rồi restart cả nhóm
       this.lose.t += PHYS.step;
-      this.tick++; // vẫn tăng để host tiếp tục gửi snapshot (client thấy trạng thái Thua)
-      if (this.lose.t >= PHYS.loseDelay) this.restart();
+      this.tick++;
+      if (!this.onDiedCallback && this.lose.t >= PHYS.loseDelay) {
+        this.restart(); // Chế độ Sandbox tự restart sau loseDelay
+      }
       return;
     }
     this.applyRope(); // dây trước: lực chân (phanh) bù ngay vận tốc dây vừa truyền, không bị trôi dần
@@ -192,6 +263,8 @@ export class GameEngine {
    */
   private drive(): void {
     for (const a of this.actors) {
+      if (!a.isLocal) continue; // Chỉ điều khiển actor local
+
       const inp = this.inputs.get(a.slot) ?? EMPTY_INPUT;
       const body = a.body;
       const m = body.getMass();
@@ -243,6 +316,7 @@ export class GameEngine {
   /**
    * Dây = ràng buộc "không dài quá ropeRest" (chùng thì không có lực), giải bằng xung lượng.
    * Dây là đoạn thẳng nối tâm, bỏ qua địa hình (như Pico Park).
+   * Chế độ phân tán: chỉ tính đoạn dây có ít nhất một đầu là local.
    */
   private applyRope(): void {
     for (const a of this.actors) {
@@ -255,6 +329,8 @@ export class GameEngine {
     for (let i = 0; i < this.actors.length - 1; i++) {
       const A = this.actors[i];
       const B = this.actors[i + 1];
+      if (!A.isLocal && !B.isLocal) continue; // Cả hai đều remote: bỏ qua
+
       const pa = A.body.getPosition();
       const pb = B.body.getPosition();
       const len = Math.hypot(pb.x - pa.x, pb.y - pa.y);
@@ -262,9 +338,12 @@ export class GameEngine {
       if (stretch <= 0 || len < 1e-4) continue; // dây chùng
       const ua = new Vec2((pb.x - pa.x) / len, (pb.y - pa.y) / len);
       const ub = new Vec2(-ua.x, -ua.y);
-      const mMin = Math.min(A.body.getMass(), B.body.getMass());
+      const mMin = Math.min(A.body.getMass() || 1, B.body.getMass() || 1);
       const maxImpulse = PHYS.ropeMaxTension * mMin * PHYS.gravity * PHYS.step;
-      segs.push({ A, B, ua, ub, stretch, ima: 1 / A.body.getMass(), imb: 1 / B.body.getMass(), total: 0, maxImpulse });
+      const bothLocal = A.isLocal && B.isLocal;
+      const ima = 1;
+      const imb = 1;
+      segs.push({ A, B, ua, ub, stretch, bothLocal, ima, imb, total: 0, maxImpulse });
     }
 
     for (let it = 0; it < PHYS.ropeIters; it++) {
@@ -280,8 +359,21 @@ export class GameEngine {
         const cap = s.stretch < PHYS.ropeMaxStretch ? s.maxImpulse : Infinity;
         s.total = Math.min(cap, Math.max(0, old + (grow + bias) / (s.ima + s.imb)));
         const d = s.total - old;
-        s.A.body.setLinearVelocity(new Vec2(va.x + s.ua.x * d * s.ima, va.y + s.ua.y * d * s.ima));
-        s.B.body.setLinearVelocity(new Vec2(vb.x + s.ub.x * d * s.imb, vb.y + s.ub.y * d * s.imb));
+
+        if (s.bothLocal) {
+          s.A.body.setLinearVelocity(new Vec2(va.x + s.ua.x * d * s.ima, va.y + s.ua.y * d * s.ima));
+          s.B.body.setLinearVelocity(new Vec2(vb.x + s.ub.x * d * s.imb, vb.y + s.ub.y * d * s.imb));
+        } else {
+          // Một bên local, một bên remote:
+          // stretch < ropeMaxStretch: local nhận 1 nửa xung lượng (d * 1)
+          // stretch >= ropeMaxStretch: local nhận toàn bộ xung lượng (d * 2) để không dài vô hạn
+          const factor = s.stretch < PHYS.ropeMaxStretch ? 1 : 2;
+          if (s.A.isLocal) {
+            s.A.body.setLinearVelocity(new Vec2(va.x + s.ua.x * d * factor, va.y + s.ua.y * d * factor));
+          } else if (s.B.isLocal) {
+            s.B.body.setLinearVelocity(new Vec2(vb.x + s.ub.x * d * factor, vb.y + s.ub.y * d * factor));
+          }
+        }
       }
     }
 
@@ -290,6 +382,7 @@ export class GameEngine {
     for (const sg of segs) {
       if (sg.total <= 0) continue;
       for (const [act, u] of [[sg.A, sg.ua], [sg.B, sg.ub]] as const) {
+        if (!act.isLocal) continue;
         if (act.supports.size > 0 || u.y >= 0) continue; // đang đứng, hoặc dây không kéo lên
         const v = act.body.getLinearVelocity();
         if (v.y < -PHYS.ropeLiftSpeed) act.body.setLinearVelocity(new Vec2(v.x, -PHYS.ropeLiftSpeed));
@@ -299,10 +392,14 @@ export class GameEngine {
     // lưu lực căng theo phương đứng (y hướng xuống → kéo lên là -u.y) cho bước sau
     for (const s of segs) {
       const tension = s.total / PHYS.step;
-      s.A.ropeX += tension * s.ua.x;
-      s.B.ropeX += tension * s.ub.x;
-      s.A.ropeLift += tension * -s.ua.y;
-      s.B.ropeLift += tension * -s.ub.y;
+      if (s.A.isLocal) {
+        s.A.ropeX += tension * s.ua.x;
+        s.A.ropeLift += tension * -s.ua.y;
+      }
+      if (s.B.isLocal) {
+        s.B.ropeX += tension * s.ub.x;
+        s.B.ropeLift += tension * -s.ub.y;
+      }
     }
   }
 
@@ -367,8 +464,12 @@ export class GameEngine {
     const { level } = this;
     let culprit: string | null = null;
     let inDoor = 0;
+    let localCount = 0;
 
     for (const a of this.actors) {
+      if (!a.isLocal) continue;
+      localCount++;
+
       const p = a.body.getPosition();
       if (p.y - PLAYER_SIZE / 2 > level.h) culprit ??= a.slot; // tụt hẳn khỏi đáy map
 
@@ -377,16 +478,28 @@ export class GameEngine {
         // mũi gai chỉ ở nửa dưới của ô
         if (overlap(box, { x: s.x + 0.1, y: s.y + 0.5, w: 0.8, h: 0.5 })) culprit ??= a.slot;
       }
-      if (!this.hasKey && level.key && overlap(box, level.key)) this.hasKey = true;
+      if (!this.hasKey && level.key && overlap(box, level.key)) {
+        this.hasKey = true;
+        this.onGotKeyCallback?.();
+      }
 
       const d = level.door;
       if (d && p.x > d.x && p.x < d.x + d.w && p.y > d.y && p.y < d.y + d.h) inDoor++;
     }
 
     if (culprit && !this.won) {
-      this.lose = { t: 0, culprit }; // bắt đầu "Thua": giữ nguyên vị trí 1 giây rồi mới restart
+      this.lose = { t: 0, culprit }; // bắt đầu "Thua"
+      const deadActor = this.actors.find((a) => a.slot === culprit);
+      if (deadActor) deadActor.body.setLinearVelocity(new Vec2(0, 0));
+      if (this.onDiedCallback) {
+        this.onDiedCallback(culprit);
+      }
       return;
     }
-    if (this.hasKey && this.actors.length > 0 && inDoor === this.actors.length) this.won = true;
+
+    // Ở chế độ Sandbox (toàn bộ actor local, không có onDiedCallback): tự win khi tất cả vào cửa
+    if (!this.onDiedCallback && this.hasKey && localCount > 0 && inDoor === localCount) {
+      this.won = true;
+    }
   }
 }
