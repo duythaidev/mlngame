@@ -122,6 +122,31 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
       );
     }
 
+    let isHidden = false;
+    let hiddenInterval: number | null = null;
+    if (engine) {
+      const onVisibility = () => {
+        isHidden = document.hidden;
+        if (isHidden) {
+          if (hiddenInterval === null) {
+            hiddenInterval = window.setInterval(() => {
+              frame(performance.now());
+            }, 50);
+          }
+        } else {
+          if (hiddenInterval !== null) {
+            clearInterval(hiddenInterval);
+            hiddenInterval = null;
+          }
+        }
+      };
+      document.addEventListener("visibilitychange", onVisibility);
+      unsubs.push(() => {
+        document.removeEventListener("visibilitychange", onVisibility);
+        if (hiddenInterval !== null) clearInterval(hiddenInterval);
+      });
+    }
+
     preloadSounds();
     let raf = 0;
     let last = performance.now();
@@ -149,6 +174,7 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
           winSince = null;
         }
         cur = engine.snapshot();
+        if (isHidden) cur.h = 1;
         sender.offer(encodeSnapshot(cur), changeKey(cur), now);
       } else {
         cur = snap;
@@ -211,6 +237,15 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
           levelName: frameLevel.name,
           isLastLevel: nextLevelId(frameLevel.id) === null,
         });
+
+        if (cur.h === 1) {
+          ctx.fillStyle = "rgba(255, 214, 0, 0.95)";
+          ctx.fillRect(0, 0, W, 22);
+          ctx.fillStyle = "#212121";
+          ctx.font = "bold 12px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("⚠ Host đang ẩn tab — trò chơi có thể giật", W / 2, 16);
+        }
 
         if (showNetStats) {
           const sm = stats.summary(now);

@@ -41,4 +41,9 @@ describe("codec v2", () => {
     expect(changeKey({ ...snap, j: { s0: 4, s1: 0 } })).not.toBe(changeKey(snap));
     expect(changeKey({ ...snap, p: { ...snap.p, s0: [333, 1158] } })).not.toBe(changeKey(snap));
   });
+  it("hỗ trợ cờ host ẩn tab h (bit 8)", () => {
+    const withH: Snapshot = { ...snap, h: 1 };
+    expect(decodeSnapshot(encodeSnapshot(withH))?.h).toBe(1);
+    expect(changeKey(withH)).not.toBe(changeKey(snap));
+  });
 });
