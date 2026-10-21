@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SnapshotBuffer } from "./interpolate";
+import { RemoteTrack, SnapshotBuffer } from "./interpolate";
 import type { Snapshot } from "../game/protocol";
 
 const TICK = 1000 / 60;
@@ -47,3 +47,36 @@ describe("SnapshotBuffer", () => {
     expect(b.positions(1000).s0[0]).toBe(9);
   });
 });
+
+describe("RemoteTrack", () => {
+  it("interpolates smoothly between two received samples", () => {
+    const track = new RemoteTrack(80);
+    track.push({ ms: 1000, epoch: 1, x: 2.0, y: 5.0, vx: 1.0, vy: 0, flags: 1 }, 1050);
+    track.push({ ms: 1100, epoch: 1, x: 3.0, y: 5.0, vx: 1.0, vy: 0, flags: 1 }, 1150);
+
+    // Render at now = 1180: renderMs = 1180 - 50 - 80 = 1050 (50% giữa 1000 và 1100)
+    const pos = track.sample(1180);
+    expect(pos).not.toBeNull();
+    expect(pos!.x).toBeCloseTo(2.5, 2);
+    expect(pos!.y).toBeCloseTo(5.0, 2);
+  });
+
+  it("does not interpolate across different epochs", () => {
+    const track = new RemoteTrack(80);
+    track.push({ ms: 1000, epoch: 1, x: 2.0, y: 5.0, vx: 0, vy: 0, flags: 1 }, 1050);
+    track.push({ ms: 1050, epoch: 2, x: 10.0, y: 5.0, vx: 0, vy: 0, flags: 1 }, 1100);
+
+    const pos = track.sample(1180);
+    expect(pos!.x).toBe(10.0);
+  });
+
+  it("does not extrapolate backwards when packets arrive out of order", () => {
+    const track = new RemoteTrack(80);
+    track.push({ ms: 2000, epoch: 1, x: 5.0, y: 5.0, vx: 0, vy: 0, flags: 1 }, 2050);
+    track.push({ ms: 1900, epoch: 1, x: 4.0, y: 5.0, vx: 0, vy: 0, flags: 1 }, 2060);
+
+    const pos = track.sample(2130);
+    expect(pos!.x).toBe(5.0);
+  });
+});
+

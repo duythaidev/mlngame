@@ -2,243 +2,339 @@
 import { useEffect, useRef } from "react";
 import { onValue, ref, set } from "firebase/database";
 import { db } from "../lib/firebase";
-import { PHYS, TILE, VIEW_W } from "../lib/constants";
+import { TILE, VIEW_W } from "../lib/constants";
 import type { SlotInfo } from "../lib/types";
 import { GameEngine } from "../game/engine";
 import { attachInput } from "../game/input";
 import { getLevel, LEVEL_IDS, nextLevelId } from "../game/level";
-import type { InputState, Snapshot } from "../game/protocol";
 import { drawFrame, drawMessage, type DrawPlayer } from "../game/renderer";
 import { playSound, preloadSounds } from "../lib/sound";
-import { changeKey, decodeSnapshot, encodeSnapshot } from "../net/codec";
-import { NetStats } from "../net/netStats";
-import { SnapshotBuffer } from "../net/interpolate";
+import { changeKeyPos, decodePos, encodePos, POS_FLAG } from "../net/posCodec";
+import { RemoteTrack } from "../net/interpolate";
 import { StateSender } from "../net/stateSender";
+import { NetStats } from "../net/netStats";
+import { dispatchGameEvent, getServerTime, initServerTimeOffset } from "../net/gameSync";
+import type { GameState } from "../net/gameState";
 
 interface Props {
   roomId: string;
   levelId: string;
   slots: Record<string, SlotInfo>;
   mySlot: string | null; // null = khán giả (admin)
-  isHost: boolean;
+  isHost?: boolean;
+  isCoordinator?: boolean;
 }
 
-export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: Props) {
+export default function GameCanvas({
+  roomId,
+  levelId,
+  slots,
+  mySlot,
+  isHost,
+  isCoordinator: isCoordProp,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  // vòng vẽ luôn đọc thông tin tên/ảnh mới nhất mà không phải dựng lại effect
   const slotsRef = useRef(slots);
   useEffect(() => {
     slotsRef.current = slots;
   });
 
-  const slotKey = Object.keys(slots).sort().join(",");
+  const slotKeys = Object.keys(slots).sort();
+  const slotKeyStr = slotKeys.join(",");
+  const isCoordinator = isCoordProp ?? isHost ?? (mySlot !== null && slotKeys[0] === mySlot);
   const level = getLevel(levelId);
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext("2d");
     if (!ctx) return;
-    const lv = getLevel(levelId);
     const W = VIEW_W;
-    const H = lv.h * TILE;
+    const H = level.h * TILE;
 
     const unsubs: Array<() => void> = [];
     const stats = new NetStats();
     const showNetStats = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("net");
-    const engine = isHost ? new GameEngine(lv, slotKey.split(",").filter(Boolean)) : null;
-    const sender = engine
-      ? new StateSender(async (p) => {
-          stats.countSend();
-          await set(ref(db, `rooms/${roomId}/state`), p);
-        })
-      : null;
-    let snap: Snapshot | null = null; // snapshot nhận được (client)
-    let isOutdated = false;
-    const buffer = new SnapshotBuffer(100); // client: vẽ trễ 100 ms, trượt mượt giữa các snapshot
-    if (engine) {
-      // host: nghe input của người khác
-      unsubs.push(
-        onValue(ref(db, `rooms/${roomId}/inputs`), (s) => {
-          const all = (s.val() ?? {}) as Record<string, Partial<InputState & { q?: number }>>;
-          for (const [slot, v] of Object.entries(all)) {
-            if (slot === mySlot) continue; // input của host áp dụng trực tiếp, không qua DB
-            engine.setInput(
-              slot,
-              { l: v.l === 1 ? 1 : 0, r: v.r === 1 ? 1 : 0, j: v.j === 1 ? 1 : 0 },
-              typeof v.q === "number" ? v.q : undefined,
-            );
-          }
-        }),
-      );
-      const onKey = (e: KeyboardEvent) => {
-        if (e.code !== "KeyR" || !engine.won) return;
-        if (nextLevelId(engine.levelId)) engine.restart();
-        else engine.setLevel(getLevel(LEVEL_IDS[0])); // hết level cuối: chơi lại từ Level 1
-        levelStartTick = engine.tick;
-      };
-      window.addEventListener("keydown", onKey);
-      unsubs.push(() => window.removeEventListener("keydown", onKey));
-    } else {
-      // client / admin: nghe snapshot của host
-      unsubs.push(
-        onValue(ref(db, `rooms/${roomId}/state`), (s) => {
-          stats.countRecv();
-          const raw = s.val();
-          if (raw !== null && raw !== undefined) {
-            const decoded = decodeSnapshot(raw);
-            if (!decoded) {
-              isOutdated = true;
-              snap = null;
-            } else {
-              isOutdated = false;
-              snap = decoded;
-              buffer.push(decoded, performance.now());
-              if (snap.a && mySlot && typeof snap.a[mySlot] === "number") {
-                stats.markAcked(snap.a[mySlot], performance.now());
-              }
-            }
-          } else {
-            snap = null;
-          }
-        }),
-      );
+
+    void initServerTimeOffset();
+
+    const sortedSlots = slotKeyStr.split(",").filter(Boolean);
+    const tracks = new Map<string, RemoteTrack>();
+    for (const s of sortedSlots) {
+      if (s !== mySlot) tracks.set(s, new RemoteTrack(80));
     }
 
-    let seq = 0;
-    let levelStartTick = 0; // host: tick lúc bắt đầu level hiện tại (để tính thời gian hoàn thành)
-    let wonBefore = false;
+    let currentGame: GameState | null = null;
+    let currentLvId = levelId;
+    let currentEpoch = 1;
+    let wonReportedForLv: string | null = null;
+    let lastGameStatus: string = "play";
+
+    const engine = new GameEngine(getLevel(levelId), sortedSlots, {
+      localSlots: mySlot ? [mySlot] : [],
+      onDied: (slot) => {
+        if (currentGame && currentGame.status === "play") {
+          void dispatchGameEvent(roomId, { type: "died", slot, epoch: currentGame.epoch });
+        }
+      },
+      onGotKey: () => {
+        if (currentGame && currentGame.status === "play" && currentGame.key === 0) {
+          void dispatchGameEvent(roomId, { type: "gotKey", epoch: currentGame.epoch });
+        }
+      },
+    });
+
+    const sender = mySlot
+      ? new StateSender(
+          async (payload) => {
+            stats.countSend();
+            await set(ref(db, `rooms/${roomId}/pos/${mySlot}`), payload);
+          },
+          { minIntervalMs: 50, heartbeatMs: 1000, maxInFlight: 3 },
+        )
+      : null;
+
+    // 1. Nghe rooms/{roomId}/game
+    unsubs.push(
+      onValue(ref(db, `rooms/${roomId}/game`), (snap) => {
+        const g = snap.val() as GameState | null;
+        if (!g) {
+          currentGame = null;
+          return;
+        }
+
+        // Đổi level
+        if (g.lv && g.lv !== currentLvId) {
+          currentLvId = g.lv;
+          engine.setLevel(getLevel(g.lv));
+        }
+
+        // Đổi epoch (restart, qua level mới, v.v.)
+        if (g.epoch !== currentEpoch) {
+          currentEpoch = g.epoch;
+          engine.respawn(sortedSlots);
+          for (const track of tracks.values()) track.reset();
+        }
+
+        // Chìa khóa
+        engine.setKey(g.key === 1);
+
+        // Âm thanh thua (phát cho mọi máy khi chuyển sang lose)
+        if (g.status === "lose" && lastGameStatus !== "lose") {
+          playSound("restart");
+        }
+        lastGameStatus = g.status;
+
+        // Báo kết quả hoàn thành cho admin (điều phối viên ghi 1 lần)
+        if (isCoordinator && g.status === "won" && wonReportedForLv !== g.lv) {
+          wonReportedForLv = g.lv;
+          const secs = Math.round(((g.at - g.levelStart) / 1000) * 10) / 10;
+          void set(ref(db, `roomList/${roomId}/results/${g.lv}`), secs).catch(console.error);
+        }
+
+        currentGame = g;
+      }),
+    );
+
+    // 2. Nghe rooms/{roomId}/pos cho các slot khác
+    unsubs.push(
+      onValue(ref(db, `rooms/${roomId}/pos`), (snap) => {
+        stats.countRecv();
+        const all = (snap.val() ?? {}) as Record<string, unknown>;
+        const now = performance.now();
+        for (const [slot, raw] of Object.entries(all)) {
+          if (slot === mySlot) continue;
+          const decoded = decodePos(raw);
+          if (!decoded) continue;
+
+          let track = tracks.get(slot);
+          if (!track) {
+            track = new RemoteTrack(80);
+            tracks.set(slot, track);
+          }
+          track.push(
+            {
+              ms: decoded.ms,
+              epoch: decoded.epoch,
+              x: decoded.x / 100,
+              y: decoded.y / 100,
+              vx: decoded.vx / 100,
+              vy: decoded.vy / 100,
+              flags: decoded.flags,
+            },
+            now,
+          );
+        }
+      }),
+    );
+
+    // 3. Phím bấm điều khiển nhân vật local
     if (mySlot) {
       unsubs.push(
         attachInput((i) => {
-          if (engine) {
-            engine.setInput(mySlot, i);
-          } else {
-            seq++;
-            stats.markSent(seq, performance.now());
-            stats.countSend();
-            void set(ref(db, `rooms/${roomId}/inputs/${mySlot}`), { ...i, q: seq }).catch(console.error);
-          }
+          engine.setInput(mySlot, i);
         }),
       );
     }
 
-    let isHidden = false;
-    let hiddenInterval: number | null = null;
-    if (engine) {
-      const onVisibility = () => {
-        isHidden = document.hidden;
-        if (isHidden) {
-          if (hiddenInterval === null) {
-            hiddenInterval = window.setInterval(() => {
-              frame(performance.now());
-            }, 50);
-          }
-        } else {
-          if (hiddenInterval !== null) {
-            clearInterval(hiddenInterval);
-            hiddenInterval = null;
-          }
-        }
-      };
-      document.addEventListener("visibilitychange", onVisibility);
-      unsubs.push(() => {
-        document.removeEventListener("visibilitychange", onVisibility);
-        if (hiddenInterval !== null) clearInterval(hiddenInterval);
-      });
-    }
+    // 4. Bấm R khi hoàn thành để chơi lại
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== "KeyR" || !currentGame || currentGame.status !== "won") return;
+      const isLast = nextLevelId(currentGame.lv) === null;
+      if (isLast) {
+        void dispatchGameEvent(roomId, { type: "replay", epoch: currentGame.epoch, lv: LEVEL_IDS[0] });
+      } else {
+        void dispatchGameEvent(roomId, { type: "replay", epoch: currentGame.epoch });
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    unsubs.push(() => window.removeEventListener("keydown", onKey));
 
     preloadSounds();
     let raf = 0;
     let last = performance.now();
-    let winSince: number | null = null; // host: lúc bắt đầu hiện "hoàn thành" (để tự qua màn)
-    let lastD = 0; // trạng thái "Thua" ở frame trước (để phát tiếng đúng 1 lần)
-    let loseStart = 0; // client: lúc nhận thấy bắt đầu "Thua" (host dùng engine.lose.t chính xác hơn)
-    let lastJump: number | null = null; // số lần nhảy của chính mình ở snapshot trước
+    let lastJumpCount = 0;
 
     const frame = (now: number) => {
       const dt = (now - last) / 1000;
       last = now;
+      const nowServer = getServerTime();
 
-      let cur: Snapshot | null;
-      if (engine && sender) {
-        engine.update(dt);
-        // vừa thắng → ghi thời gian hoàn thành level cho admin (1 lần ghi, không stream)
-        if (engine.won && !wonBefore) {
-          const secs = Math.round(((engine.tick - levelStartTick) / 60) * 10) / 10;
-          void set(ref(db, `roomList/${roomId}/results/${engine.levelId}`), secs).catch(console.error);
+      // Cập nhật vị trí remote vào engine
+      for (const [slot, track] of tracks.entries()) {
+        const sample = track.sample(now);
+        if (sample) {
+          engine.setRemote(slot, sample.x, sample.y, sample.vx, sample.vy);
         }
-        wonBefore = engine.won;
-        // tự qua level kế sau winDelay giây (level cuối thì chờ host bấm R)
-        if (engine.won) {
-          winSince ??= now;
-          const next = nextLevelId(engine.levelId);
-          if (next && now - winSince >= PHYS.winDelay * 1000) {
-            engine.setLevel(getLevel(next));
-            levelStartTick = engine.tick;
-            winSince = null;
-          }
-        } else {
-          winSince = null;
-        }
-        cur = engine.snapshot();
-        if (isHidden) cur.h = 1;
-        sender.offer(encodeSnapshot(cur), changeKey(cur), now);
-      } else {
-        cur = snap;
       }
 
-      if (isOutdated) {
-        drawMessage(ctx, W, H, "Phiên bản cũ — tải lại trang (Ctrl+F5)");
-      } else if (!cur) {
-        drawMessage(ctx, W, H, "Đang chờ host…");
+      // Cập nhật vật lý
+      if (currentGame?.status === "play") {
+        engine.update(dt);
       } else {
-        const frameLevel = getLevel(cur.lv ?? levelId);
-        const sorted = Object.keys(cur.p ?? {}).sort();
-        const d = cur.d ?? 0;
-        // host vẽ thẳng từ engine; client/admin vẽ vị trí nội suy (không đoán trước → không giật lùi)
-        const interp = engine ? null : buffer.positions(now);
+        engine.freeze();
+      }
+
+      // Âm thanh nhảy: chỉ phát cho máy mình khi số lần nhảy tăng
+      if (mySlot) {
+        const jCount = engine.jumps[mySlot] ?? 0;
+        if (jCount > lastJumpCount) {
+          playSound("jump");
+          lastJumpCount = jCount;
+        }
+      }
+
+      // Gửi vị trí local lên Firebase
+      if (mySlot && sender) {
+        const local = engine.getLocalPos(mySlot);
+        if (local) {
+          const flags =
+            (local.grounded ? POS_FLAG.GROUNDED : 0) |
+            (local.inDoor ? POS_FLAG.IN_DOOR : 0) |
+            (currentGame?.status === "lose" ? POS_FLAG.FROZEN : 0);
+
+          const posMsg = {
+            ms: now,
+            epoch: currentGame?.epoch ?? 1,
+            x: local.x,
+            y: local.y,
+            vx: local.vx,
+            vy: local.vy,
+            flags,
+          };
+          sender.offer(encodePos(posMsg), changeKeyPos(posMsg), now);
+        }
+      }
+
+      // Logic điều phối viên và fallback cho mọi máy
+      if (currentGame) {
+        // Kiểm tra cả nhóm vào cửa
+        if (currentGame.status === "play" && currentGame.key === 1 && sortedSlots.length > 0) {
+          let allInside = true;
+          for (const slot of sortedSlots) {
+            if (slot === mySlot) {
+              const local = engine.getLocalPos(slot);
+              if (!local?.inDoor) allInside = false;
+            } else {
+              const s = tracks.get(slot)?.sample(now);
+              if (!s || (s.flags & POS_FLAG.IN_DOOR) === 0) allInside = false;
+            }
+          }
+          if (allInside && isCoordinator) {
+            void dispatchGameEvent(roomId, { type: "allInDoor", epoch: currentGame.epoch });
+          }
+        }
+
+        // Restart sau 1 giây thua
+        if (currentGame.status === "lose") {
+          const elapsed = nowServer - currentGame.at;
+          if (isCoordinator && elapsed >= 1000) {
+            void dispatchGameEvent(roomId, { type: "restart", epoch: currentGame.epoch });
+          } else if (!isCoordinator && elapsed >= 2500) {
+            // Fallback khi điều phối viên ẩn tab / rớt mạng
+            void dispatchGameEvent(roomId, { type: "restart", epoch: currentGame.epoch });
+          }
+        }
+
+        // Tự qua màn sau 3 giây thắng
+        if (currentGame.status === "won") {
+          const elapsed = nowServer - currentGame.at;
+          const next = nextLevelId(currentGame.lv);
+          if (next) {
+            if (isCoordinator && elapsed >= 3000) {
+              void dispatchGameEvent(roomId, { type: "nextLevel", epoch: currentGame.epoch, nextLv: next });
+            } else if (!isCoordinator && elapsed >= 4500) {
+              // Fallback
+              void dispatchGameEvent(roomId, { type: "nextLevel", epoch: currentGame.epoch, nextLv: next });
+            }
+          }
+        }
+      }
+
+      // Vẽ khung hình
+      if (!currentGame) {
+        drawMessage(ctx, W, H, "Đang kết nối phòng chơi…");
+      } else {
+        const frameLevel = getLevel(currentGame.lv ?? levelId);
         const players: DrawPlayer[] = [];
-        for (const [slot, pos] of Object.entries(cur.p ?? {})) {
-          const [x, y] = interp?.[slot] ?? [pos[0] / 100, pos[1] / 100];
+        const snap = engine.snapshot();
+
+        for (const slot of sortedSlots) {
           const info = slotsRef.current[slot];
+          let x: number;
+          let y: number;
+
+          if (slot === mySlot) {
+            // Máy mình: lấy thẳng từ engine (0 trễ)
+            const p = snap.p[slot] ?? [level.spawn.x * 100, level.spawn.y * 100];
+            x = p[0] / 100;
+            y = p[1] / 100;
+          } else {
+            // Máy người khác: nội suy mượt từ RemoteTrack
+            const sampled = tracks.get(slot)?.sample(now);
+            if (sampled) {
+              x = sampled.x;
+              y = sampled.y;
+            } else {
+              const p = snap.p[slot] ?? [level.spawn.x * 100, level.spawn.y * 100];
+              x = p[0] / 100;
+              y = p[1] / 100;
+            }
+          }
           players.push({ slot, x, y, name: info?.name ?? slot, avatar: info?.avatar });
         }
 
-        // "Thua": phát tiếng đúng lúc chuyển sang trạng thái thua; thời gian hoạt ảnh lấy từ engine (host) hoặc đồng hồ cục bộ
-        if (d === 1 && lastD === 0) {
-          playSound("restart");
-          loseStart = now;
-        }
-        lastD = d;
-        const loseT = engine?.lose ? engine.lose.t : (now - loseStart) / 1000;
-        const loseSlot = d === 1 ? sorted[cur.c ?? -1] : undefined;
-
-        // tiếng nhảy: chỉ của chính mình, khi số lần nhảy thật sự (engine đếm) tăng
-        if (mySlot) {
-          const n = cur.j?.[mySlot];
-          if (n !== undefined) {
-            if (lastJump !== null && n > lastJump) playSound("jump");
-            lastJump = n;
-          }
-        }
+        const loseT =
+          currentGame.status === "lose" ? Math.max(0, (nowServer - currentGame.at) / 1000) : 0;
+        const loseSlot =
+          currentGame.status === "lose" ? currentGame.loseBy ?? sortedSlots[0] : undefined;
 
         drawFrame(ctx, frameLevel, {
           players,
-          hasKey: cur.k === 1,
-          won: cur.w === 1,
-          lose: loseSlot ? { slot: loseSlot, t: Math.max(0, loseT) } : null,
+          hasKey: currentGame.key === 1,
+          won: currentGame.status === "won",
+          lose: loseSlot ? { slot: loseSlot, t: loseT } : null,
           levelName: frameLevel.name,
           isLastLevel: nextLevelId(frameLevel.id) === null,
         });
-
-        if (cur.h === 1) {
-          ctx.fillStyle = "rgba(255, 214, 0, 0.95)";
-          ctx.fillRect(0, 0, W, 22);
-          ctx.fillStyle = "#212121";
-          ctx.font = "bold 12px sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText("⚠ Host đang ẩn tab — trò chơi có thể giật", W / 2, 16);
-        }
 
         if (showNetStats) {
           const sm = stats.summary(now);
@@ -248,17 +344,16 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
           ctx.font = "bold 12px monospace";
           ctx.textAlign = "left";
           ctx.fillText(
-            `trễ p50 ${sm.p50}ms p95 ${sm.p95}ms · gửi ${sm.sendPerSec}/s · nhận ${sm.recvPerSec}/s`,
+            `gửi ${sm.sendPerSec}/s · nhận ${sm.recvPerSec}/s · epoch ${currentGame.epoch}`,
             14,
             H - 13,
           );
         }
       }
     };
-    // CHỈ vòng rAF này tự lặp lại. frame() không tự đặt lịch, nên khi tab host ẩn (setInterval gọi frame)
-    // sẽ không còn xếp hàng hàng trăm rAF rồi bung ra thành nhiều vòng lặp song song khi tab hiện lại.
+
     const loop = (now: number) => {
-      if (!document.hidden) frame(now);
+      frame(now);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
@@ -267,7 +362,7 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
       cancelAnimationFrame(raf);
       unsubs.forEach((u) => u());
     };
-  }, [roomId, levelId, mySlot, isHost, slotKey]);
+  }, [roomId, levelId, mySlot, slotKeyStr, isCoordinator, level.h]);
 
   return <canvas ref={canvasRef} width={VIEW_W} height={level.h * TILE} />;
 }

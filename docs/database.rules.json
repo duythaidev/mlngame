@@ -1,0 +1,33 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    "roomList": {
+      "$roomId": {
+        ".write": "auth != null"
+      }
+    },
+    "rooms": {
+      "$roomId": {
+        ".read": "auth != null",
+        "allowed": {
+          ".write": "auth != null"
+        },
+        "slots": {
+          "$slot": {
+            ".write": "auth != null && (!data.exists() || data.child('uid').val() === auth.uid)"
+          }
+        },
+        "pos": {
+          "$slot": {
+            ".write": "auth != null && root.child('rooms').child($roomId).child('slots').child($slot).child('uid').val() === auth.uid",
+            ".validate": "newData.isString() && newData.val().length < 120"
+          }
+        },
+        "game": {
+          ".write": "auth != null && root.child('rooms').child($roomId).child('slots').exists()",
+          ".validate": "newData.hasChildren(['lv', 'epoch', 'status', 'key', 'at', 'levelStart'])"
+        }
+      }
+    }
+  }
+}
