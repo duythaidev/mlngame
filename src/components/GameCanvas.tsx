@@ -10,7 +10,9 @@ import { getLevel, LEVEL_IDS, nextLevelId } from "../game/level";
 import type { InputState, Snapshot } from "../game/protocol";
 import { drawFrame, drawMessage, type DrawPlayer } from "../game/renderer";
 import { playSound, preloadSounds } from "../lib/sound";
+import { changeKey, decodeSnapshot, encodeSnapshot } from "../net/codec";
 import { NetStats } from "../net/netStats";
+import { StateSender } from "../net/stateSender";
 
 interface Props {
   roomId: string;
@@ -43,7 +45,14 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
     const stats = new NetStats();
     const showNetStats = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("net");
     const engine = isHost ? new GameEngine(lv, slotKey.split(",").filter(Boolean)) : null;
+    const sender = engine
+      ? new StateSender(async (p) => {
+          stats.countSend();
+          await set(ref(db, `rooms/${roomId}/state`), p);
+        })
+      : null;
     let snap: Snapshot | null = null; // snapshot nhận được (client)
+    let isOutdated = false;
     const shown: Record<string, [number, number]> = {}; // vị trí đang hiển thị (đã làm mượt)
     let lastR = -1;
 
@@ -74,9 +83,21 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
       unsubs.push(
         onValue(ref(db, `rooms/${roomId}/state`), (s) => {
           stats.countRecv();
-          snap = s.val() as Snapshot | null;
-          if (snap?.a && mySlot && typeof snap.a[mySlot] === "number") {
-            stats.markAcked(snap.a[mySlot], performance.now());
+          const raw = s.val();
+          if (raw !== null && raw !== undefined) {
+            const decoded = decodeSnapshot(raw);
+            if (!decoded) {
+              isOutdated = true;
+              snap = null;
+            } else {
+              isOutdated = false;
+              snap = decoded;
+              if (snap.a && mySlot && typeof snap.a[mySlot] === "number") {
+                stats.markAcked(snap.a[mySlot], performance.now());
+              }
+            }
+          } else {
+            snap = null;
           }
         }),
       );
@@ -101,7 +122,6 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
     preloadSounds();
     let raf = 0;
     let last = performance.now();
-    let sentTick = 0;
     let winSince: number | null = null; // host: lúc bắt đầu hiện "hoàn thành" (để tự qua màn)
     let lastD = 0; // trạng thái "Thua" ở frame trước (để phát tiếng đúng 1 lần)
     let loseStart = 0; // client: lúc nhận thấy bắt đầu "Thua" (host dùng engine.lose.t chính xác hơn)
@@ -112,7 +132,7 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
       last = now;
 
       let cur: Snapshot | null;
-      if (engine) {
+      if (engine && sender) {
         engine.update(dt);
         // tự qua level kế sau winDelay giây (level cuối thì chờ host bấm R)
         if (engine.won) {
@@ -126,16 +146,14 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
           winSince = null;
         }
         cur = engine.snapshot();
-        if (engine.tick - sentTick >= PHYS.snapshotEvery) {
-          sentTick = engine.tick;
-          stats.countSend();
-          void set(ref(db, `rooms/${roomId}/state`), cur).catch(console.error);
-        }
+        sender.offer(encodeSnapshot(cur), changeKey(cur), now);
       } else {
         cur = snap;
       }
 
-      if (!cur) {
+      if (isOutdated) {
+        drawMessage(ctx, W, H, "Phiên bản cũ — tải lại trang (Ctrl+F5)");
+      } else if (!cur) {
         drawMessage(ctx, W, H, "Đang chờ host…");
       } else {
         const frameLevel = getLevel(cur.lv ?? levelId);
