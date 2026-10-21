@@ -280,9 +280,14 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, isHost }: P
           );
         }
       }
-      raf = requestAnimationFrame(frame);
     };
-    raf = requestAnimationFrame(frame);
+    // CHỈ vòng rAF này tự lặp lại. frame() không tự đặt lịch, nên khi tab host ẩn (setInterval gọi frame)
+    // sẽ không còn xếp hàng hàng trăm rAF rồi bung ra thành nhiều vòng lặp song song khi tab hiện lại.
+    const loop = (now: number) => {
+      if (!document.hidden) frame(now);
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
 
     return () => {
       cancelAnimationFrame(raf);

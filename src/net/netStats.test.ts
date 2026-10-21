@@ -16,4 +16,9 @@ describe("NetStats", () => {
     for (let i = 0; i < 30; i++) s.countSend();
     expect(s.summary(performance.now()).sendPerSec).toBe(30);
   });
+  it("bộ đếm tự dọn mẫu cũ hơn 1 s dù không ai gọi summary()", () => {
+    const s = new NetStats();
+    for (let i = 0; i < 10000; i++) s.countSend(i * 33); // ~5.5 phút gửi 30/s
+    expect((s as unknown as { sends: number[] }).sends.length).toBeLessThanOrEqual(31);
+  });
 });

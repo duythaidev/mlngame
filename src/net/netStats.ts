@@ -41,16 +41,22 @@ export class NetStats {
 
   countSend(now: number = performance.now()): void {
     this.sends.push(now);
+    this.prune(now); // dọn ngay khi ghi: không phụ thuộc có ai gọi summary() (host không gọi → trước đây phình mãi)
   }
 
   countRecv(now: number = performance.now()): void {
     this.recvs.push(now);
+    this.prune(now);
   }
 
-  summary(now: number = performance.now()): NetSummary {
+  private prune(now: number): void {
     const windowStart = now - 1000;
     while (this.sends.length > 0 && this.sends[0] < windowStart) this.sends.shift();
     while (this.recvs.length > 0 && this.recvs[0] < windowStart) this.recvs.shift();
+  }
+
+  summary(now: number = performance.now()): NetSummary {
+    this.prune(now);
 
     let p50 = 0;
     let p95 = 0;
