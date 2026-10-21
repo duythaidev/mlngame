@@ -2,7 +2,6 @@
 import { get, onDisconnect, push, ref, remove, set, update } from "firebase/database";
 import { db } from "./firebase";
 import type { Profile, SlotInfo } from "./types";
-import { EMPTY_INPUT } from "../game/protocol";
 
 export async function createRoom(name: string, max: number, level = "1"): Promise<string> {
   const id = push(ref(db, "roomList")).key;
@@ -39,21 +38,22 @@ export async function joinRoom(
     }
 
     const playerRef = ref(db, `roomList/${roomId}/players/${uid}`);
-    const inputRef = ref(db, `rooms/${roomId}/inputs/${slot}`);
+    const posRef = ref(db, `rooms/${roomId}/pos/${slot}`);
     const dropSlot = onDisconnect(slotRef);
     const dropPlayer = onDisconnect(playerRef);
+    const dropPos = onDisconnect(posRef);
+
     await dropSlot.remove();
     await dropPlayer.remove();
+    await dropPos.remove();
     await set(playerRef, data.name);
-    await set(inputRef, EMPTY_INPUT); // xóa input cũ còn sót của người trước
+    await remove(posRef); // xóa vị trí cũ còn sót
 
     return {
       slot,
       leave: async () => {
-        await Promise.all([dropSlot.cancel(), dropPlayer.cancel()]);
-        await remove(inputRef);
-        await remove(playerRef);
-        await remove(slotRef);
+        await Promise.all([dropSlot.cancel(), dropPlayer.cancel(), dropPos.cancel()]);
+        await Promise.all([remove(posRef), remove(playerRef), remove(slotRef)]);
       },
     };
   }
