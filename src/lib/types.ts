@@ -11,10 +11,18 @@ export interface RoomMeta {
   phase: "lobby" | "playing";
   level: string;
   players?: Record<string, string>; // uid -> tên (để lobby/admin đếm người)
-  results?: Record<string, number>; // levelId -> số giây cả nhóm hoàn thành (lần gần nhất, tính cả lần chết)
 }
 
 export interface Profile {
   name: string;
   avatar: string | null;
+}
+
+export interface ResultRow {
+  roomId: string;
+  roomName: string;
+  levelId: string;
+  seconds: number;
+  players: string[];
+  createdAt: number;
 }

@@ -1,5 +1,4 @@
-// src/pages/Admin.tsx
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { signInAnonymously, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import badgeStar from "../assets/badge-star.svg";
@@ -7,6 +6,8 @@ import { auth } from "../lib/firebase";
 import { useDbValue, useRoomList, useUser } from "../lib/hooks";
 import { LEVEL_IDS, getLevel } from "../game/level";
 import { createRoom, deleteRoom } from "../lib/rooms";
+import { GAME_SERVER_URL } from "../lib/gameServer";
+import type { ResultRow } from "../lib/types";
 
 function fmtTime(secs: number): string {
   const m = Math.floor(secs / 60);
@@ -14,10 +15,34 @@ function fmtTime(secs: number): string {
   return m > 0 ? `${m}:${sec}` : `${sec}s`;
 }
 
+/** Kết quả hoàn thành lấy từ game server, tải lại mỗi 10 giây khi trang mở. */
+function useResults(): ResultRow[] {
+  const [rows, setRows] = useState<ResultRow[]>([]);
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      try {
+        const res = await fetch(`${GAME_SERVER_URL}/api/results?limit=200`);
+        if (res.ok && alive) setRows((await res.json()) as ResultRow[]);
+      } catch {
+        /* server tạm thời không tới được — giữ dữ liệu cũ */
+      }
+    };
+    void load();
+    const timer = setInterval(() => void load(), 10_000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, []);
+  return rows;
+}
+
 export default function Admin() {
   const user = useUser();
   const isAdmin = useDbValue<boolean>(user ? `admins/${user.uid}` : null);
   const rooms = useRoomList();
+  const results = useResults();
 
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
@@ -216,7 +241,7 @@ export default function Admin() {
               <div className="muted" style={{ marginTop: 6, fontSize: 13 }}>
                 <strong>Thời gian hoàn thành:</strong>{" "}
                 {LEVEL_IDS.map((lv) => {
-                  const t = r.results?.[lv];
+                  const t = results.find((x) => x.roomId === r.id && x.levelId === lv)?.seconds;
                   return (
                     <span key={lv} className="tag" style={{ marginRight: 6 }}>
                       {getLevel(lv).name.split(" — ")[0]}: {t !== undefined ? fmtTime(t) : "—"}
@@ -228,6 +253,24 @@ export default function Admin() {
           );
         })
       )}
+
+      <h2 style={{ marginTop: 24 }}>★ 10 Lượt Hoàn Thành Gần Nhất</h2>
+      <div className="card">
+        {results.length === 0 ? (
+          <p className="muted" style={{ margin: 0 }}>Chưa có lượt hoàn thành nào.</p>
+        ) : (
+          results.slice(0, 10).map((x) => (
+            <div key={`${x.roomId}-${x.levelId}-${x.createdAt}`} className="row" style={{ justifyContent: "space-between", padding: "4px 0" }}>
+              <span>
+                <strong>{x.roomName}</strong> · {getLevel(x.levelId).name.split(" — ")[0]}
+              </span>
+              <span>{fmtTime(x.seconds)}</span>
+              <span className="muted">{x.players.join(", ")}</span>
+              <span className="muted">{new Date(x.createdAt).toLocaleTimeString("vi-VN")}</span>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

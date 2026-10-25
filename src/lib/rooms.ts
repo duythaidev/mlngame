@@ -38,22 +38,18 @@ export async function joinRoom(
     }
 
     const playerRef = ref(db, `roomList/${roomId}/players/${uid}`);
-    const posRef = ref(db, `rooms/${roomId}/pos/${slot}`);
     const dropSlot = onDisconnect(slotRef);
     const dropPlayer = onDisconnect(playerRef);
-    const dropPos = onDisconnect(posRef);
 
     await dropSlot.remove();
     await dropPlayer.remove();
-    await dropPos.remove();
     await set(playerRef, data.name);
-    await remove(posRef); // xóa vị trí cũ còn sót
 
     return {
       slot,
       leave: async () => {
-        await Promise.all([dropSlot.cancel(), dropPlayer.cancel(), dropPos.cancel()]);
-        await Promise.all([remove(posRef), remove(playerRef), remove(slotRef)]);
+        await Promise.all([dropSlot.cancel(), dropPlayer.cancel()]);
+        await Promise.all([remove(playerRef), remove(slotRef)]);
       },
     };
   }

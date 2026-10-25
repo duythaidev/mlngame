@@ -13,7 +13,6 @@ import { loadProfile, saveProfile } from "../lib/profile";
 import { joinRoom } from "../lib/rooms";
 import { fileToAvatar } from "../lib/avatar";
 import type { Profile, RoomMeta, SlotInfo } from "../lib/types";
-import { dispatchGameEvent } from "../net/gameSync";
 
 export default function Room() {
   const { id = "" } = useParams();
@@ -100,9 +99,6 @@ export default function Room() {
   }
 
   const setPhase = async (phase: "lobby" | "playing") => {
-    if (phase === "playing") {
-      await dispatchGameEvent(id, { type: "start", lv: meta.value?.level ?? "1" });
-    }
     await set(ref(db, `roomList/${id}/phase`), phase).catch(console.error);
   };
 
@@ -336,7 +332,7 @@ export default function Room() {
               <p className="muted">Đang kết nối tín hiệu vào phòng…</p>
             </div>
           ) : (
-            <GameCanvas roomId={id} levelId={m.level} slots={slots} mySlot={mySlot} isCoordinator={isCoordinator} />
+            <GameCanvas roomId={id} levelId={m.level} slots={slots} mySlot={mySlot} />
           )}
           {mySlot !== null && <TouchControls showRestart={isHost} />}
 

@@ -1,14 +1,14 @@
 // src/net/interpolate.ts
 // Nội suy snapshot cho client: vẽ "lùi về quá khứ" một chút (delayMs) và trượt mượt giữa 2 snapshot đã nhận.
 // Không đoán trước → không bao giờ bị kéo lùi/giật răng cưa như ngoại suy.
-// Thời gian dùng tick vật lý của host (60 tick/s) nên không bị nhiễu bởi việc gói tin đến dồn cục.
+// Thời gian dùng tick vật lý của server (60 tick/s) nên không bị nhiễu bởi việc gói tin đến dồn cục.
 import type { Snapshot } from "../game/protocol";
 
 const TICK_MS = 1000 / 60;
 
 export class SnapshotBuffer {
   private buf: Snapshot[] = [];
-  private offset: number | null = null; // ước lượng: giờ cục bộ (ms) − giờ host (ms)
+  private offset: number | null = null; // ước lượng: giờ cục bộ (ms) − giờ server (ms)
   private delayMs: number;
 
   constructor(delayMs = 100) {
@@ -17,7 +17,7 @@ export class SnapshotBuffer {
 
   push(s: Snapshot, recvAt: number): void {
     const last = this.buf[this.buf.length - 1];
-    if (last && s.t < last.t) this.buf = []; // host mới (tick đếm lại từ đầu)
+    if (last && s.t < last.t) this.buf = []; // engine mới (tick đếm lại từ đầu)
     if (last && s.t === last.t) return;
     this.buf.push(s);
     if (this.buf.length > 32) this.buf.shift();
@@ -36,7 +36,7 @@ export class SnapshotBuffer {
   positions(now: number): Record<string, [number, number]> {
     const n = this.buf.length;
     if (n === 0 || this.offset === null) return {};
-    const renderT = (now - this.offset - this.delayMs) / TICK_MS; // tính theo tick host
+    const renderT = (now - this.offset - this.delayMs) / TICK_MS; // tính theo tick server
 
     let a = this.buf[0];
     let b = this.buf[n - 1];
@@ -65,91 +65,3 @@ function toTiles(p: Snapshot["p"]): Record<string, [number, number]> {
   for (const [slot, [x, y]] of Object.entries(p)) out[slot] = [x / 100, y / 100];
   return out;
 }
-
-export interface RemoteSample {
-  ms: number;
-  epoch: number;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  flags: number;
-}
-
-export class RemoteTrack {
-  private buf: RemoteSample[] = [];
-  private offset: number | null = null;
-  private delayMs: number;
-  private currentEpoch: number | null = null;
-
-  constructor(delayMs = 80) {
-    this.delayMs = delayMs;
-  }
-
-  reset(): void {
-    this.buf = [];
-    this.offset = null;
-    this.currentEpoch = null;
-  }
-
-  push(s: RemoteSample, recvAt: number): void {
-    if (this.currentEpoch === null || s.epoch !== this.currentEpoch) {
-      this.reset();
-      this.currentEpoch = s.epoch;
-    }
-
-    const last = this.buf[this.buf.length - 1];
-    if (last && s.ms <= last.ms) return; // Bỏ qua gói tin cũ/đến trễ
-
-    this.buf.push(s);
-    if (this.buf.length > 32) this.buf.shift();
-
-    const o = recvAt - s.ms;
-    if (this.offset === null || o < this.offset || last === undefined) {
-      this.offset = o;
-    } else {
-      this.offset += (o - this.offset) * 0.02; // Bù trôi đồng hồ từ từ
-    }
-  }
-
-  sample(now: number): { x: number; y: number; vx: number; vy: number; flags: number } | null {
-    const n = this.buf.length;
-    if (n === 0 || this.offset === null) return null;
-
-    const renderMs = now - this.offset - this.delayMs;
-    const a = this.buf[0];
-    const b = this.buf[n - 1];
-
-    if (renderMs <= a.ms) {
-      return { x: a.x, y: a.y, vx: a.vx, vy: a.vy, flags: a.flags };
-    }
-    if (renderMs >= b.ms) {
-      return { x: b.x, y: b.y, vx: b.vx, vy: b.vy, flags: b.flags };
-    }
-
-    let left = a;
-    let right = b;
-    for (let i = 0; i < n - 1; i++) {
-      if (this.buf[i].ms <= renderMs && renderMs <= this.buf[i + 1].ms) {
-        left = this.buf[i];
-        right = this.buf[i + 1];
-        break;
-      }
-    }
-
-    if (left.epoch !== right.epoch) {
-      return { x: right.x, y: right.y, vx: right.vx, vy: right.vy, flags: right.flags };
-    }
-
-    const span = right.ms - left.ms;
-    const k = span > 0 ? (renderMs - left.ms) / span : 0;
-    return {
-      x: left.x + (right.x - left.x) * k,
-      y: left.y + (right.y - left.y) * k,
-      vx: right.vx,
-      vy: right.vy,
-      flags: right.flags,
-    };
-  }
-}
-
