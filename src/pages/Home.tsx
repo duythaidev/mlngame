@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import heroBanner from "../assets/hero-banner.jpg";
 import badgeStar from "../assets/badge-star.svg";
 import { fileToAvatar } from "../lib/avatar";
-import { PRESET_AVATARS } from "../lib/constants";
+import { PRESET_AVATARS } from "../lib/avatars";
 import { useRoomList, useUser } from "../lib/hooks";
 import { loadProfile, saveProfile } from "../lib/profile";
 import type { Profile } from "../lib/types";

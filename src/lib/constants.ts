@@ -3,24 +3,6 @@ export const TILE = 32; // pixel / ô khi vẽ
 export const VIEW_W = 800; // chiều rộng canvas (25 ô)
 export const PLAYER_SIZE = 0.8; // kích thước hitbox nhân vật (ô)
 
-import avatarSoldier from "../assets/avatar-soldier.jpg";
-import avatarVolunteer from "../assets/avatar-volunteer.jpg";
-import avatarBuilder from "../assets/avatar-builder.svg";
-import avatarScholar from "../assets/avatar-scholar.svg";
-
-export interface PresetAvatar {
-  id: string;
-  name: string;
-  src: string;
-}
-
-export const PRESET_AVATARS: PresetAvatar[] = [
-  { id: "soldier", name: "Chiến sĩ", src: avatarSoldier },
-  { id: "volunteer", name: "Thanh niên", src: avatarVolunteer },
-  { id: "builder", name: "Công nhân", src: avatarBuilder },
-  { id: "scholar", name: "Sinh viên", src: avatarScholar },
-];
-
 // Màu theo ô: đỏ cờ, xanh dương, xanh lá, cam, tím, vàng sao, hồng, ngà
 export const SLOT_COLORS = [
   "#D32F2F", "#1976D2", "#388E3C", "#F57C00",
