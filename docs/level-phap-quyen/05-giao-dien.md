@@ -53,7 +53,7 @@ export class BannerTracker {
 
 ## Bước 2 — Vẽ
 
-**Tạo mới / thay toàn bộ** `src/game/renderer.ts` (664 dòng):
+**Tạo mới / thay toàn bộ** `src/game/renderer.ts` (668 dòng):
 
 ```ts
 // src/game/renderer.ts
@@ -572,10 +572,14 @@ function drawBanner(ctx: CanvasRenderingContext2D, W: number, b: Banner): void {
     ctx.textAlign = "center";
     ctx.fillText(b.text, W / 2, 57, W - 56);
   } else {
+    // dòng nhỏ dưới thanh HUD, có nền trắng để không chìm vào trần / vách màu cam
     ctx.font = "12px sans-serif";
-    ctx.fillStyle = "rgba(34, 34, 34, 0.7)";
+    const w = Math.min(W - 16, ctx.measureText(b.text).width + 14);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
+    ctx.fillRect(8, 27, w, 18);
+    ctx.fillStyle = C.ink;
     ctx.textAlign = "left";
-    ctx.fillText(b.text, 10, 38, W - 20);
+    ctx.fillText(b.text, 15, 40, W - 30);
   }
 }
 
