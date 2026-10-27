@@ -282,7 +282,8 @@ describe("5 level dựng được và không ai chết khi đứng yên ở xu�
     for (const n of [2, 5]) {
       it(`level ${id}, ${n} người`, () => {
         const L = getLevel(id);
-        expect(L.segCount).toBeGreaterThanOrEqual(6);
+        expect(L.segCount).toBeGreaterThanOrEqual(5);
+        expect(L.partCount).toBe(5);
         const e = new GameEngine(L, slots(n));
         run(e, 60 * 3);
         expect(e.snapshot().r).toBe(0);

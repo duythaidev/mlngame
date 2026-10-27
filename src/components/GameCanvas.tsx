@@ -1,5 +1,5 @@
 // src/components/GameCanvas.tsx
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { auth } from "../lib/firebase";
 import { GAME_AUTH_OFF, GAME_SERVER_URL } from "../lib/gameServer";
 import { TILE, VIEW_W } from "../lib/constants";
@@ -8,9 +8,8 @@ import { attachInput } from "../game/input";
 import { getLevel, nextLevelId } from "../game/level";
 import { decodeObjView } from "../game/objects";
 import type { Snapshot } from "../game/protocol";
+import { ProgressTracker, type Progress } from "../game/progress";
 import { drawFrame, drawMessage, type DrawPlayer } from "../game/renderer";
-import { BannerTracker } from "../game/storyTracker";
-import EndingPanel from "./EndingPanel";
 import { playSound, preloadSounds } from "../lib/sound";
 import { connectGame, type GameStatus } from "../net/gameSocket";
 import { SnapshotBuffer } from "../net/interpolate";
@@ -21,6 +20,8 @@ interface Props {
   levelId: string;
   slots: Record<string, SlotInfo>;
   mySlot: string | null;
+  /** Báo tiến độ (level / phần / thắng) mỗi khi đổi — cho thanh thời gian, khung tư liệu, poster kết. */
+  onProgress?: (p: Progress) => void;
 }
 
 const INTERP_DELAY_MS = 50;
@@ -37,14 +38,15 @@ function statusText(status: GameStatus, detail: string): string {
   return "";
 }
 
-export default function GameCanvas({ roomId, levelId, slots, mySlot }: Props) {
+export default function GameCanvas({ roomId, levelId, slots, mySlot, onProgress }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const slotsRef = useRef(slots);
+  const onProgressRef = useRef(onProgress);
   useEffect(() => {
     slotsRef.current = slots;
+    onProgressRef.current = onProgress;
   });
   const level = getLevel(levelId);
-  const [ending, setEnding] = useState(false);
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext("2d");
@@ -67,8 +69,7 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot }: Props) {
     let lastD = 0;
     let loseStart = 0;
     let lastJump: number | null = null;
-    const banner = new BannerTracker();
-    let lastEnding = false;
+    const progress = new ProgressTracker();
 
     preloadSounds();
 
@@ -153,16 +154,12 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot }: Props) {
           isLastLevel: isLast,
           view,
           bodies: buffer.bodies(now),
-          banner: banner.update(frameLevel, view, now),
           time: now / 1000,
         });
 
-        // màn kết: chỉ cập nhật React khi đổi
-        const showEnding = cur.w === 1 && isLast;
-        if (showEnding !== lastEnding) {
-          lastEnding = showEnding;
-          setEnding(showEnding);
-        }
+        // tiến độ ra React: chỉ khi đổi (level, phần, thắng)
+        const pr = progress.update(frameLevel, view?.cp ?? 0, cur.w === 1);
+        if (pr) onProgressRef.current?.(pr);
 
         if (status !== "playing") {
           ctx.fillStyle = "rgba(255, 214, 0, 0.95)";
@@ -197,11 +194,8 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot }: Props) {
   }, [roomId, levelId, mySlot]);
 
   return (
-    <>
-      <div className="canvas-wrap">
-        <canvas ref={canvasRef} width={VIEW_W} height={level.h * TILE} />
-        <EndingPanel show={ending} />
-      </div>
-    </>
+    <div className="canvas-wrap">
+      <canvas ref={canvasRef} width={VIEW_W} height={level.h * TILE} />
+    </div>
   );
 }

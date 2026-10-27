@@ -221,6 +221,10 @@ export default function Home() {
             padding: "12px 16px",
           }}
         >
+          <Link to="/showcase" className="btn gold sm" style={{ textDecoration: "none" }}>
+            🎨 Bộ Khối UI Minh Họa (Showcase)
+          </Link>
+          <span className="muted">·</span>
           <Link to="/admin" className="btn ghost sm">
             ⚙ Bàn Quản Trị (Admin)
           </Link>

@@ -29,6 +29,7 @@ class Seg:
         s.sigs = {}
         s.door = None
         s.used = set()
+        s.cont = False  # True = nối tiếp phần của đoạn trước
 
     # ---------------------------------------------------------------- vẽ địa hình
     def put(s, x, y, c):
@@ -197,7 +198,10 @@ def emit(chapters):
     for cid, name, segs in chapters:
         for i, s in enumerate(segs):
             s.check_spawn(f"level {cid} đoạn {i + 1}")
-        out += ["  {", f"    id: {ts(cid)},", f"    name: {ts(name)},", "    segments: ["]
+        parts = [i for i, s in enumerate(segs) if not s.cont]
+        if not parts or parts[0] != 0:
+            raise ValueError(f"level {cid}: đoạn đầu phải mở một phần")
+        out += ["  {", f"    id: {ts(cid)},", f"    name: {ts(name)},", f"    parts: {ts(parts)},", "    segments: ["]
         for i, s in enumerate(segs):
             out += [f"      // đoạn {i + 1}", "      {", "        rows: ["]
             out += [f"          {json.dumps(r)}," for r in s.rows()]

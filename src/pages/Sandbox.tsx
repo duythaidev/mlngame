@@ -3,11 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import badgeStar from "../assets/badge-star.svg";
 import { GameEngine } from "../game/engine";
-import EndingPanel from "../components/EndingPanel";
+import GameStage from "../components/GameStage";
 import { attachInput, KEYS_ARROWS, KEYS_WASD, type KeyMap } from "../game/input";
 import { getLevel, LEVEL_IDS, nextLevelId, TRAINING_IDS } from "../game/level";
 import { decodeObjView } from "../game/objects";
-import { BannerTracker } from "../game/storyTracker";
+import { ProgressTracker, START, type Progress } from "../game/progress";
 import { drawFrame } from "../game/renderer";
 import { PHYS, TILE, VIEW_W } from "../lib/constants";
 import { playSound, preloadSounds } from "../lib/sound";
@@ -22,7 +22,8 @@ const EXTRA_KEYS: KeyMap[] = [
 export default function Sandbox() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const level = getLevel("1");
-  const [ending, setEnding] = useState(false);
+  const [progress, setProgress] = useState<Progress>(START);
+  const engineRef = useRef<GameEngine | null>(null);
   // ?n=3 → 3 người (2–5)
   const n = Math.max(2, Math.min(5, Number(new URLSearchParams(window.location.search).get("n")) || 2));
 
@@ -32,10 +33,10 @@ export default function Sandbox() {
 
     const slots = Array.from({ length: n }, (_, i) => `s${i}`);
     const engine = new GameEngine(level, slots);
+    engineRef.current = engine;
     const maps = [KEYS_WASD, KEYS_ARROWS, ...EXTRA_KEYS];
     const offs = slots.map((s, i) => attachInput((inp) => engine.setInput(s, inp), maps[i]));
-    const banner = new BannerTracker();
-    let lastEnding = false;
+    const tracker = new ProgressTracker();
     const onKey = (e: KeyboardEvent) => {
       if (e.code === "KeyR") engine.restart();
       if (e.code === "KeyP") engine.respawnAtCheckpoint(); // về cột mốc gần nhất (thử lại một đoạn)
@@ -88,14 +89,10 @@ export default function Sandbox() {
         levelName: lv.name,
         isLastLevel: isLast,
         view,
-        banner: banner.update(lv, view, now),
         time: now / 1000,
       });
-      const showEnding = snap.w === 1 && isLast;
-      if (showEnding !== lastEnding) {
-        lastEnding = showEnding;
-        setEnding(showEnding);
-      }
+      const pr = tracker.update(lv, view?.cp ?? 0, snap.w === 1);
+      if (pr) setProgress(pr);
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
@@ -108,7 +105,7 @@ export default function Sandbox() {
   }, [level, n]);
 
   return (
-    <div className="page">
+    <div className="page page-wide">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <h1 style={{ margin: 0 }}>
           <img src={badgeStar} alt="Star" style={{ width: 28, height: 28 }} />
@@ -130,10 +127,11 @@ export default function Sandbox() {
           </div>
         </div>
 
-        <div className="canvas-wrap">
-          <canvas ref={canvasRef} width={VIEW_W} height={level.h * TILE} />
-          <EndingPanel show={ending} />
-        </div>
+        <GameStage progress={progress} onReplay={() => engineRef.current?.setLevel(getLevel(LEVEL_IDS[0]))}>
+          <div className="canvas-wrap">
+            <canvas ref={canvasRef} width={VIEW_W} height={level.h * TILE} />
+          </div>
+        </GameStage>
 
         <div className="arcade-controls-guide">
           <div>

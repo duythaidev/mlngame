@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 const Room = lazy(() => import("./pages/Room"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Sandbox = lazy(() => import("./pages/Sandbox"));
+const UiIllustrationShowcase = lazy(() => import("./components/illustrations/UiIllustrationShowcase"));
 
 export default function App() {
   return (
@@ -15,6 +16,8 @@ export default function App() {
         <Route path="/room/:id" element={<Room />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/sandbox" element={<Sandbox />} />
+        <Route path="/showcase" element={<UiIllustrationShowcase />} />
+        <Route path="/illustrations" element={<UiIllustrationShowcase />} />
         <Route path="*" element={<Home />} />
       </Routes>
     </Suspense>

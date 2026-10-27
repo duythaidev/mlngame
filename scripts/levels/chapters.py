@@ -73,13 +73,6 @@ s.receiver(31, 32, 10, 11, "ballot", "*B", "homphieu")
 s.gate(35, "*B")
 L.append(s)
 
-# 1.5 — hai bập bênh trên hố
-s = Seg(35)
-s.pit(6, 25)
-s.seesaw(8, 14)
-s.seesaw(17, 23)
-L.append(s)
-
 # 1.6 — cột có nút giữa hố → cầu vàng → chìa trên bục 2 ô
 s = Seg(38)
 s.pit(6, 29)
@@ -92,20 +85,14 @@ s.fill(33, 34, 10, 11, "#")
 s.carry("key", [(33, 9)], "*K")
 L.append(s)
 
-# 1.7 — dãy nút dẫn đường (người dẫn đi lối trên)
-s = Seg(40)
-x = stairs_up(s, 6, 11, 10)            # bậc (6,11) → lối trên hàng 9
-s.fill(7, 7, 10, 11, "#")
-end = guided(s, 10, 6, 9, "G")
-L.append(s)
-
 # 1.8 — cửa (người mang chìa chạm cửa)
 s = Seg(26)
 s.fill(6, 7, 11, 11, "#")
 s.put(12, 11, "X")
 s.doorway(17, "*K")
+s.cont = True  # cùng phần với đoạn trước (giữ cột mốc hồi sinh, không có cổng mốc)
 L.append(s)
-C.append(("1", "1945–1946 · Nền móng", L))
+C.append(("1", "1919–1946 · Nền móng", L))
 
 # ====================================================================== LEVEL 2 · 1976–1986
 L = []
@@ -131,16 +118,6 @@ s.pit(32, 33)
 s.ice(34, 38)
 for x in (15, 27, 36):
     s.put(x, 11, "X")
-L.append(s)
-
-# 2.3 — bập bênh giữa hai bờ băng
-s = Seg(36)
-s.ice(3, 6)
-s.pit(7, 8)
-s.seesaw(9, 15)
-s.pit(16, 17)
-s.ice(18, 26)
-s.put(23, 11, "X")
 L.append(s)
 
 # 2.4 — băng chuyền xuôi vào gai + sàn sụp
@@ -172,22 +149,12 @@ s.carry("word", [(37, 11)], "*W", text="dongluc")
 s.receiver(41, 43, 9, 11, "word", "*W", "khungchu")
 L.append(s)
 
-# 2.7 — trần hạ dần + sàn sụp liền
-s = Seg(36)
-s.ceiling(5, 13, 7)
-s.ceiling(14, 23, 9)
-s.ceiling(24, 35, 10)
-s.put(9, 11, "X")
-s.pit(25, 32)
-for x in (25, 27, 29, 31):
-    s.crumble(x, x + 1)
-L.append(s)
-
 # 2.8 — cửa (mở khi khung chữ đủ)
 s = Seg(26)
 s.fill(6, 6, 11, 11, "#")
 s.put(11, 11, "X")
 s.doorway(17, "*W")
+s.cont = True  # cùng phần với đoạn trước (giữ cột mốc hồi sinh, không có cổng mốc)
 L.append(s)
 C.append(("2", "1976–1986 · Thống nhất và Đổi mới", L))
 
@@ -235,17 +202,6 @@ s.receiver(50, 51, 6, 8, "word", "*Y", "khungchu")
 s.gate(52, "*Y", y1=8)
 L.append(s)
 
-# 3.5 — sàn sụp xen gai
-s = Seg(32)
-s.pit(6, 9)
-s.crumble(7, 8)
-s.put(12, 11, "X")
-s.pit(14, 21)
-s.crumble(15, 16)
-s.crumble(19, 20)
-s.put(25, 11, "X")
-L.append(s)
-
 # 3.6 — sàn chở có nút dưới trần nguy hiểm, 2 đầu dập
 s = Seg(48)
 s.pit(6, 43)
@@ -264,6 +220,7 @@ s.fill(11, 13, 10, 10, "#")
 s.carry("key", [(12, 9)], "*K")
 s.put(18, 11, "X")
 s.pit(22, 23)
+s.cont = True  # cùng phần với đoạn trước (giữ cột mốc hồi sinh, không có cổng mốc)
 L.append(s)
 
 # 3.8 — cửa
@@ -271,6 +228,7 @@ s = Seg(26)
 s.fill(7, 8, 11, 11, "#")
 s.put(11, 11, "X")
 s.doorway(17, "*K")
+s.cont = True  # cùng phần với đoạn trước (giữ cột mốc hồi sinh, không có cổng mốc)
 L.append(s)
 C.append(("3", "1991–1995 · Hình thành khái niệm", L))
 
@@ -306,38 +264,6 @@ s.seesaw(8, 14)
 s.seesaw(17, 23)
 L.append(s)
 
-# 4.4 — trần thấp (không nhảy được) + băng chuyền ngược + sàn sụp liền
-s = Seg(36)
-s.ceiling(3, 33, 10)
-s.conveyor(4, 12, -2)
-s.pit(13, 16)
-s.crumble(13, 14)
-s.crumble(15, 16)
-s.conveyor(17, 25, -2)
-s.pit(26, 29)
-s.crumble(26, 27)
-s.crumble(28, 29)
-L.append(s)
-
-# 4.5 — hai cụm dãy nút dẫn đường nối bằng bục số
-s = Seg(54)
-stairs_up(s, 6, 11, 10)
-s.fill(7, 7, 10, 11, "#")
-guided(s, 9, 3, 9, "G")
-s.lift(25, 30, 3, drop=True)
-s.fill(31, 53, 9, 11, "#")
-s.fill(32, 32, 8, 8, "#")
-s.fill(33, 33, 7, 8, "#")
-s.pit(35, 46, 9)
-s.fill(34, 47, 6, 6, "#")
-for i in range(3):
-    a = 35 + 4 * i
-    me = f"H{i}"
-    near = [f"H{j}" for j in (i - 1, i + 1) if 0 <= j < 3]
-    s.bridge(a, a + 3, me, near, y=9)
-    s.pads([a + 1], me, y=5)
-L.append(s)
-
 # 4.6 — khối "cả nhóm" trên băng phải dừng đúng ô đích; khối đỏ quét ngang
 s = Seg(40)
 s.ice(3, 34)
@@ -362,6 +288,7 @@ s.box(8, 11, 1, 1, 1)
 s.fill(18, 31, 9, 11, "#")
 s.carry("key", [(19, 8)], "*K")
 s.doorway(24, "*K", y=8)
+s.cont = True  # cùng phần với đoạn trước (giữ cột mốc hồi sinh, không có cổng mốc)
 L.append(s)
 C.append(("4", "2001–2022 · Hiến định và hoàn thiện", L))
 
@@ -388,20 +315,6 @@ s.seesaw(10, 16)
 s.pit(17, 18)
 s.conveyor(19, 27, -2)
 s.put(31, 11, "X")
-L.append(s)
-
-# 5.3 — 3 nút có nhãn (khối đè khi thiếu người) → dãy nút dẫn đường có khối đỏ quét ngang cầu
-s = Seg(48)
-s.pads([6], "A", label="lapphap")
-s.pads([10], "A", label="hanhphap")
-s.pads([14], "A", label="tuphap")
-s.sigs["A"] = {"latch": True}
-s.box(17, 11, 1, 1, 1)
-s.gate(20, "A", label="du3nut")
-stairs_up(s, 22, 11, 10)
-s.fill(23, 23, 10, 11, "#")
-guided(s, 25, 3, 9, "G")
-s.hazard(25, 11, 1, 1, [[0, 0], [11, 0]], 3, 0.5)
 L.append(s)
 
 # 5.4 — vùng chậm chắn hố; đẩy khối "bãi bỏ" trên băng dừng đúng ô đích

@@ -53,6 +53,8 @@ export interface SegmentDef {
 export interface ChapterDef {
   id: string;
   name: string;
+  /** Chỉ số đoạn mở đầu mỗi phần (có cổng mốc + ảnh tư liệu). Không có = mỗi đoạn một phần. */
+  parts?: number[];
   segments: SegmentDef[];
 }
 
@@ -85,6 +87,8 @@ export interface Level {
   checkpoints: Checkpoint[]; // [0] = điểm xuất phát
   segCount: number;
   segX: number[]; // cột bắt đầu của từng đoạn
+  partOf: number[]; // đoạn → phần (0-based)
+  partCount: number;
   objects: ObjDef[];
   sigs: Record<string, SigSpec>;
   sigNames: string[]; // sắp xếp — thứ tự bit tín hiệu trong snapshot
@@ -180,6 +184,20 @@ function mergeCells(cells: { x: number; y: number }[]): Rect[] {
     else merged.push({ ...r });
   }
   return merged;
+}
+
+/** Đoạn → phần theo def.parts (chỉ số đoạn mở đầu mỗi phần, tăng dần, bắt đầu từ 0). */
+function partsOf(def: ChapterDef): { partOf: number[]; partCount: number } {
+  const starts = def.parts ?? def.segments.map((_, i) => i);
+  if (starts[0] !== 0 || starts.some((s, i) => i > 0 && s <= starts[i - 1]) || starts[starts.length - 1] >= def.segments.length)
+    throw new Error(`Level ${def.id}: parts phải tăng dần, bắt đầu từ 0 và nhỏ hơn số đoạn`);
+  const partOf = def.segments.map((_, si) => starts.filter((s) => s <= si).length - 1);
+  return { partOf, partCount: starts.length };
+}
+
+/** Phần (0-based) chứa cột mốc hiện tại của nhóm. */
+export function partAt(level: Level, cp: number): number {
+  return level.partOf[level.checkpoints[cp]?.seg ?? 0] ?? 0;
 }
 
 /** Ghép các đoạn theo chiều ngang (thêm vách trái/phải) rồi dựng Level. Xuất ra để test dựng level riêng. */
@@ -285,6 +303,7 @@ export function buildLevel(def: ChapterDef): Level {
     checkpoints,
     segCount: def.segments.length,
     segX: offsets,
+    ...partsOf(def),
     objects,
     sigs,
     doorSig,
@@ -395,6 +414,8 @@ function parseTraining(id: string, name: string, rows: string[]): Level {
     checkpoints: [{ x: sx, y: sy, seg: 0 }],
     segCount: 1,
     segX: [0],
+    partOf: [0],
+    partCount: 1,
     objects: [],
     sigs: {},
     doorSig: null,

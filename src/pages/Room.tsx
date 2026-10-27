@@ -3,6 +3,8 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ref, set } from "firebase/database";
 import GameCanvas from "../components/GameCanvas";
+import GameStage from "../components/GameStage";
+import { START, type Progress } from "../game/progress";
 import TouchControls from "../components/TouchControls";
 import badgeStar from "../assets/badge-star.svg";
 import { db } from "../lib/firebase";
@@ -36,6 +38,7 @@ export default function Room() {
   });
   const [needsName, setNeedsName] = useState(() => !loadProfile().name.trim());
   const [joinTrigger, setJoinTrigger] = useState(0);
+  const [progress, setProgress] = useState<Progress>(START);
 
   useEffect(() => {
     if (!uid) return;
@@ -213,7 +216,7 @@ export default function Room() {
   }
 
   return (
-    <div className="page">
+    <div className={m.phase === "playing" ? "page page-wide" : "page"}>
       {/* Top Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
         <h1 style={{ margin: 0 }}>
@@ -336,7 +339,9 @@ export default function Room() {
               <p className="muted">Đang kết nối tín hiệu vào phòng…</p>
             </div>
           ) : (
-            <GameCanvas roomId={id} levelId={m.level} slots={slots} mySlot={mySlot} />
+            <GameStage progress={progress} footnote={isHost ? "Bấm R để cả phòng chơi lại" : "Chờ chủ phòng bấm R để chơi lại"}>
+              <GameCanvas roomId={id} levelId={m.level} slots={slots} mySlot={mySlot} onProgress={setProgress} />
+            </GameStage>
           )}
           {mySlot !== null && <TouchControls showRestart={isHost} />}
 
