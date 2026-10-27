@@ -13,7 +13,8 @@ export function encodeSnapshot(s: Snapshot): string {
     const a = s.a?.[slot] ?? 0;
     return `${slot},${pos[0]},${pos[1]},${vel[0]},${vel[1]},${j},${a}`;
   });
-  return `${WIRE_VERSION}|${s.t}|${s.r}|${flags}|${s.c}|${s.lv}|${pParts.join(";")}`;
+  const base = `${WIRE_VERSION}|${s.t}|${s.r}|${flags}|${s.c}|${s.lv}|${pParts.join(";")}`;
+  return s.o ? `${base}|${s.o}` : base; // phần thứ 8 (trạng thái vật thể) có thể không có
 }
 
 export function decodeSnapshot(raw: unknown): Snapshot | null {
@@ -95,6 +96,7 @@ export function decodeSnapshot(raw: unknown): Snapshot | null {
   if ((flags & 8) !== 0) {
     res.h = 1;
   }
+  if (parts[7]) res.o = parts[7];
 
   return res;
 }
@@ -109,5 +111,5 @@ export function changeKey(s: Snapshot): string {
     const a = s.a?.[slot] ?? 0;
     return `${slot}:${pos[0]},${pos[1]},${vel[0]},${vel[1]},${j},${a}`;
   });
-  return `${s.r}|${flags}|${s.c}|${s.lv}|${pParts.join(";")}`;
+  return `${s.r}|${flags}|${s.c}|${s.lv}|${pParts.join(";")}|${s.o ?? ""}`;
 }

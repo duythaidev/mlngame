@@ -1,13 +1,16 @@
 // src/components/GameCanvas.tsx
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { auth } from "../lib/firebase";
 import { GAME_AUTH_OFF, GAME_SERVER_URL } from "../lib/gameServer";
 import { TILE, VIEW_W } from "../lib/constants";
 import type { SlotInfo } from "../lib/types";
 import { attachInput } from "../game/input";
 import { getLevel, nextLevelId } from "../game/level";
+import { decodeObjView } from "../game/objects";
 import type { Snapshot } from "../game/protocol";
 import { drawFrame, drawMessage, type DrawPlayer } from "../game/renderer";
+import { BannerTracker } from "../game/storyTracker";
+import EndingPanel from "./EndingPanel";
 import { playSound, preloadSounds } from "../lib/sound";
 import { connectGame, type GameStatus } from "../net/gameSocket";
 import { SnapshotBuffer } from "../net/interpolate";
@@ -41,6 +44,7 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot }: Props) {
     slotsRef.current = slots;
   });
   const level = getLevel(levelId);
+  const [ending, setEnding] = useState(false);
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext("2d");
@@ -63,6 +67,8 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot }: Props) {
     let lastD = 0;
     let loseStart = 0;
     let lastJump: number | null = null;
+    const banner = new BannerTracker();
+    let lastEnding = false;
 
     preloadSounds();
 
@@ -136,14 +142,27 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot }: Props) {
           lastJump = n;
         }
 
+        const view = decodeObjView(cur.o);
+        const isLast = nextLevelId(frameLevel.id) === null;
         drawFrame(ctx, frameLevel, {
           players,
           hasKey: cur.k === 1,
           won: cur.w === 1,
           lose: loseSlot ? { slot: loseSlot, t: Math.max(0, (now - loseStart) / 1000) } : null,
           levelName: frameLevel.name,
-          isLastLevel: nextLevelId(frameLevel.id) === null,
+          isLastLevel: isLast,
+          view,
+          bodies: buffer.bodies(now),
+          banner: banner.update(frameLevel, view, now),
+          time: now / 1000,
         });
+
+        // màn kết: chỉ cập nhật React khi đổi
+        const showEnding = cur.w === 1 && isLast;
+        if (showEnding !== lastEnding) {
+          lastEnding = showEnding;
+          setEnding(showEnding);
+        }
 
         if (status !== "playing") {
           ctx.fillStyle = "rgba(255, 214, 0, 0.95)";
@@ -177,5 +196,12 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot }: Props) {
     };
   }, [roomId, levelId, mySlot]);
 
-  return <canvas ref={canvasRef} width={VIEW_W} height={level.h * TILE} />;
+  return (
+    <>
+      <div className="canvas-wrap">
+        <canvas ref={canvasRef} width={VIEW_W} height={level.h * TILE} />
+        <EndingPanel show={ending} />
+      </div>
+    </>
+  );
 }

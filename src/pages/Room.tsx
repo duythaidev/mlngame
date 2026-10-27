@@ -14,6 +14,9 @@ import { joinRoom } from "../lib/rooms";
 import { fileToAvatar } from "../lib/avatar";
 import type { Profile, RoomMeta, SlotInfo } from "../lib/types";
 
+// Level được thiết kế cho nhóm 2–5 người. Thử một mình: tạo .env.local với VITE_MIN_PLAYERS=1
+const MIN_PLAYERS = Number(import.meta.env.VITE_MIN_PLAYERS ?? 2);
+
 export default function Room() {
   const { id = "" } = useParams();
   const uid = useUser()?.uid ?? null;
@@ -295,7 +298,8 @@ export default function Room() {
               <button
                 className="btn gold"
                 style={{ fontSize: 18, padding: "12px 28px" }}
-                disabled={keys.length < 1}
+                disabled={keys.length < MIN_PLAYERS}
+                title={keys.length < MIN_PLAYERS ? `Cần ít nhất ${MIN_PLAYERS} người` : undefined}
                 onClick={() => setPhase("playing")}
               >
                 ★ BẮT ĐẦU CHƠI NGAY ★
