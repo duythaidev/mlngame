@@ -1,19 +1,19 @@
 // src/pages/Room.tsx
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ref, set } from "firebase/database";
+import CharacterPicker, { CharacterPreview } from "../components/CharacterPicker";
 import GameCanvas from "../components/GameCanvas";
 import GameStage from "../components/GameStage";
+import { roleOf, type RoleId } from "../game/characters";
 import { START, type Progress } from "../game/progress";
 import TouchControls from "../components/TouchControls";
 import badgeStar from "../assets/badge-star.svg";
 import { db } from "../lib/firebase";
-import { PRESET_AVATARS } from "../lib/avatars";
 import { SLOT_COLORS } from "../lib/constants";
 import { useDbValue, useUser } from "../lib/hooks";
 import { loadProfile, saveProfile } from "../lib/profile";
 import { joinRoom } from "../lib/rooms";
-import { fileToAvatar } from "../lib/avatar";
 import type { Profile, RoomMeta, SlotInfo } from "../lib/types";
 
 // Level được thiết kế cho nhóm 2–5 người. Thử một mình: tạo .env.local với VITE_MIN_PLAYERS=1
@@ -31,9 +31,7 @@ export default function Room() {
   // Hỗ trợ người vào thẳng qua link mà chưa có tên trong localStorage
   const [profile, setProfile] = useState<Profile>(() => {
     const p = loadProfile();
-    if (!p.avatar && PRESET_AVATARS[0]) {
-      p.avatar = PRESET_AVATARS[0].src;
-    }
+    p.avatar = roleOf(p.avatar); // nhân vật mặc định / chuyển ảnh cũ sang id vai
     return p;
   });
   const [needsName, setNeedsName] = useState(() => !loadProfile().name.trim());
@@ -77,22 +75,8 @@ export default function Room() {
     setJoinTrigger((t) => t + 1);
   }
 
-  async function onPickAvatar(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const avatar = await fileToAvatar(file);
-      const updated = { ...profile, avatar };
-      setProfile(updated);
-      saveProfile(updated);
-      setError("");
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  }
-
-  function handleSelectPreset(src: string) {
-    const updated = { ...profile, avatar: src };
+  function handleSelectRole(role: RoleId) {
+    const updated = { ...profile, avatar: role };
     setProfile(updated);
     saveProfile(updated);
   }
@@ -118,7 +102,7 @@ export default function Room() {
       <div className="page">
         <h1>
           <img src={badgeStar} alt="Star" style={{ width: 26, height: 26 }} />
-          PICO ROPE: ĐẠI ĐOÀN KẾT
+          PICO ROPE: MLN131
         </h1>
         <p className="err">{error}</p>
         <Link to="/" className="btn ghost sm">← Về trang chủ</Link>
@@ -137,7 +121,7 @@ export default function Room() {
   if (!meta.value) {
     return (
       <div className="page">
-        <h1>PICO ROPE: ĐẠI ĐOÀN KẾT</h1>
+        <h1>PICO ROPE: MLN131</h1>
         <div className="card">
           <p className="err">Phòng không tồn tại hoặc đã bị đóng.</p>
           <Link to="/" className="btn ghost">← Về danh sách phòng</Link>
@@ -176,29 +160,9 @@ export default function Room() {
 
             <div>
               <div className="muted" style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
-                Chọn hình đại diện:
+                Chọn nhân vật:
               </div>
-              <div className="preset-avatars-grid">
-                {PRESET_AVATARS.map((pa) => {
-                  const isSelected = profile.avatar === pa.src;
-                  return (
-                    <button
-                      type="button"
-                      key={pa.id}
-                      className={`preset-avatar-btn ${isSelected ? "selected" : ""}`}
-                      onClick={() => handleSelectPreset(pa.src)}
-                    >
-                      <img className="avatar" src={pa.src} alt={pa.name} />
-                      <span>{pa.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <span className="muted" style={{ fontSize: 12 }}>Tự tải ảnh riêng:</span>
-              <input type="file" accept="image/*" onChange={onPickAvatar} style={{ fontSize: 12 }} />
+              <CharacterPicker value={profile.avatar} onChange={handleSelectRole} />
             </div>
 
             <button
@@ -274,8 +238,10 @@ export default function Room() {
                   key={s}
                   style={{ borderLeftWidth: 6, borderLeftColor: slotColor }}
                 >
-                  {p?.avatar ? (
-                    <img className="avatar" src={p.avatar} alt="" />
+                  {p ? (
+                    <div className="avatar" style={{ display: "grid", placeItems: "center" }}>
+                      <CharacterPreview role={roleOf(p.avatar, s)} scale={2} />
+                    </div>
                   ) : (
                     <div className="avatar" style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#888" }}>
                       Trống
@@ -325,7 +291,7 @@ export default function Room() {
           <div className="arcade-bezel-header">
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <img src={badgeStar} alt="Star" style={{ width: 18, height: 18 }} />
-              <span>PICO ROPE · {m.name.toUpperCase()}</span>
+              <span>NHÓM: {m.name.toUpperCase()}</span>
             </div>
             <div className="arcade-bezel-lights">
               <span className="red" />

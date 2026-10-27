@@ -172,14 +172,6 @@ export function drawCrumble(ctx: CanvasRenderingContext2D, r: R, th: Theme, rema
   } else {
     box(ctx, r.x, r.y, r.w, r.h, th.era >= 3 ? "#CFD8DC" : "#A1887F", 2);
   }
-  ctx.strokeStyle = "#4E342E";
-  ctx.lineWidth = 2;
-  ctx.beginPath(); // vết nứt, lan dần khi sắp sụp
-  const k = remain >= 0 ? 1 - Math.max(0, remain) / Math.max(0.01, PHYS.crumbleShake) : 0.3;
-  ctx.moveTo(r.x + 8, r.y);
-  ctx.lineTo(r.x + 14, r.y + 10 * (0.6 + k));
-  ctx.lineTo(r.x + 8 + r.w * 0.5 * Math.min(1, k + 0.3), r.y + r.h - 4);
-  ctx.stroke();
   if (remain >= 0) {
     ctx.font = `bold ${r.w >= 2 * TILE ? 14 : 11}px monospace`;
     ctx.textAlign = "center";

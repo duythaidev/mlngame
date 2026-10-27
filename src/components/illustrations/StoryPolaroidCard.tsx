@@ -71,10 +71,6 @@ export const StoryPolaroidCard: React.FC<StoryPolaroidCardProps> = ({
         </div>
 
         <div className="polaroid-text">
-          <div className="archive-eyebrow">
-            <span>TƯ LIỆU · LEVEL {currentEra} · PHẦN {stepObj.step}/5</span>
-          </div>
-
           <div className="archive-year-wrap">
             <div className="archive-year-brush" />
             <div className={`archive-year-num font-oswald ${longYear ? "is-long" : ""}`}>{stepObj.year}</div>
@@ -83,7 +79,7 @@ export const StoryPolaroidCard: React.FC<StoryPolaroidCardProps> = ({
           <h3 className="archive-event-title font-oswald">{stepObj.title}</h3>
 
           <blockquote className="archive-quote-box">
-            <p className="archive-quote-text font-serif-vn">{stepObj.quote}</p>
+            <p className="archive-quote-text">{stepObj.quote}</p>
           </blockquote>
 
           {stepObj.source && (

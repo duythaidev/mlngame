@@ -1,10 +1,10 @@
 // src/pages/Home.tsx
-import { useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import heroBanner from "../assets/hero-banner.jpg";
 import badgeStar from "../assets/badge-star.svg";
-import { fileToAvatar } from "../lib/avatar";
-import { PRESET_AVATARS } from "../lib/avatars";
+import CharacterPicker, { CharacterPreview } from "../components/CharacterPicker";
+import { roleOf, type RoleId } from "../game/characters";
 import { useRoomList, useUser } from "../lib/hooks";
 import { loadProfile, saveProfile } from "../lib/profile";
 import type { Profile } from "../lib/types";
@@ -15,30 +15,13 @@ export default function Home() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile>(() => {
     const p = loadProfile();
-    // Gán avatar mặc định nếu chưa có
-    if (!p.avatar && PRESET_AVATARS[0]) {
-      p.avatar = PRESET_AVATARS[0].src;
-    }
+    p.avatar = roleOf(p.avatar); // nhân vật mặc định / chuyển ảnh cũ sang id vai
     return p;
   });
   const [error, setError] = useState("");
 
-  async function onPickAvatar(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const avatar = await fileToAvatar(file);
-      const updated = { ...profile, avatar };
-      setProfile(updated);
-      saveProfile(updated);
-      setError("");
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  }
-
-  function handleSelectPreset(src: string) {
-    const updated = { ...profile, avatar: src };
+  function handleSelectRole(role: RoleId) {
+    const updated = { ...profile, avatar: role };
     setProfile(updated);
     saveProfile(updated);
   }
@@ -72,13 +55,13 @@ export default function Home() {
           <img
             className="hero-banner-img"
             src={heroBanner}
-            alt="Pico Rope Đại Đoàn Kết"
+            alt="Pico Rope MLN131"
           />
           <div className="hero-overlay">
             <div className="hero-title-group">
               <h1>
                 <img src={badgeStar} alt="Star" style={{ width: 28, height: 28 }} />
-                PICO ROPE: ĐẠI ĐOÀN KẾT
+                PICO ROPE: MLN131
               </h1>
               <div className="hero-subtitle">
                 Trò chơi đồng đội vượt thử thách · Sức mạnh của sự gắn kết
@@ -96,16 +79,14 @@ export default function Home() {
             <h2 style={{ margin: 0, fontSize: 18, color: "var(--red-dark)" }}>
               ★ Thẻ Người Chơi
             </h2>
-            <span className="muted" style={{ fontSize: 12 }}>Chọn nhân vật hoặc tải ảnh riêng</span>
+            <span className="muted" style={{ fontSize: 12 }}>Chọn nhân vật của bạn</span>
           </div>
 
           <div className="row" style={{ alignItems: "flex-start", gap: 16 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-              {profile.avatar ? (
-                <img className="avatar" style={{ width: 64, height: 64, borderWidth: 3 }} src={profile.avatar} alt="avatar" />
-              ) : (
-                <div className="avatar" style={{ width: 64, height: 64 }} />
-              )}
+              <div className="avatar" style={{ width: 64, height: 76, borderWidth: 3, display: "grid", placeItems: "center" }}>
+                <CharacterPreview role={roleOf(profile.avatar)} scale={4} />
+              </div>
               <span className="tag sm" style={{ fontSize: 11 }}>Đang chọn</span>
             </div>
 
@@ -123,32 +104,7 @@ export default function Home() {
                 <div className="muted" style={{ fontSize: 12, marginBottom: 6, fontWeight: 600 }}>
                   Chọn nhanh nhân vật:
                 </div>
-                <div className="preset-avatars-grid">
-                  {PRESET_AVATARS.map((pa) => {
-                    const isSelected = profile.avatar === pa.src;
-                    return (
-                      <button
-                        type="button"
-                        key={pa.id}
-                        className={`preset-avatar-btn ${isSelected ? "selected" : ""}`}
-                        onClick={() => handleSelectPreset(pa.src)}
-                      >
-                        <img className="avatar" src={pa.src} alt={pa.name} />
-                        <span>{pa.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <span className="muted" style={{ fontSize: 12 }}>Hoặc tự tải ảnh lên (thu 32×32):</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={onPickAvatar}
-                  style={{ fontSize: 12 }}
-                />
+                <CharacterPicker value={profile.avatar} onChange={handleSelectRole} />
               </div>
             </div>
           </div>
@@ -221,9 +177,6 @@ export default function Home() {
             padding: "12px 16px",
           }}
         >
-          <Link to="/showcase" className="btn gold sm" style={{ textDecoration: "none" }}>
-            🎨 Bộ Khối UI Minh Họa (Showcase)
-          </Link>
           <span className="muted">·</span>
           <Link to="/admin" className="btn ghost sm">
             ⚙ Bàn Quản Trị (Admin)

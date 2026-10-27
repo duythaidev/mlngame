@@ -2,7 +2,7 @@
 export interface SlotInfo {
   uid: string;
   name: string;
-  avatar?: string; // data-URL 32x32
+  avatar?: string; // id nhân vật: soldier | volunteer | builder | scholar (xem src/game/characters.ts)
 }
 
 export interface RoomMeta {

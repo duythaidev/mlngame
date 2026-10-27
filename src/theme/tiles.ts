@@ -18,45 +18,50 @@ function tileCanvas(th: Theme): HTMLCanvasElement {
   g.fillStyle = th.tile.joint;
   g.strokeStyle = th.tile.joint;
   switch (th.era) {
-    case 1: // đất nện + đá ong lỗ chỗ
-      for (let i = 0; i < 14; i++) {
-        g.globalAlpha = 0.35 + rnd() * 0.4;
+    case 1: // đất nện + đá ong nhẹ nhàng
+      for (let i = 0; i < 10; i++) {
+        g.globalAlpha = 0.12 + rnd() * 0.18;
         g.beginPath();
-        g.arc(rnd() * TILE, rnd() * TILE, 1 + rnd() * 2, 0, Math.PI * 2);
+        g.arc(rnd() * TILE, rnd() * TILE, 1 + rnd() * 1.5, 0, Math.PI * 2);
         g.fill();
       }
       g.globalAlpha = 1;
       break;
-    case 2: // gạch đỏ cũ ghép so le
-      g.fillRect(0, 15, TILE, 2);
+    case 2: // gạch đỏ cũ ghép so le thanh nhã
+      g.globalAlpha = 0.55;
+      g.fillRect(0, 15, TILE, 1.5);
       g.fillRect(0, 31, TILE, 1);
-      g.fillRect(15, 0, 2, 15);
+      g.fillRect(15, 0, 1.5, 15);
       g.fillRect(0, 17, 1, 14);
       g.fillRect(31, 17, 1, 14);
-      g.globalAlpha = 0.25;
-      g.fillRect(4, 4, 6, 3); // vết sứt
+      g.globalAlpha = 0.15;
+      g.fillRect(4, 4, 5, 2.5); // vết sứt nhẹ
       g.globalAlpha = 1;
       break;
-    case 3: // granite hạt mịn, đường ghép đá vuông
-      for (let i = 0; i < 30; i++) {
-        g.globalAlpha = 0.3;
+    case 3: // granite hạt mịn tao nhã, mạch gạch mờ tinh tế
+      for (let i = 0; i < 10; i++) {
+        g.globalAlpha = 0.08;
         g.fillRect(rnd() * TILE, rnd() * TILE, 1, 1);
       }
-      g.globalAlpha = 1;
+      g.globalAlpha = 0.12;
       g.lineWidth = 1;
       g.strokeRect(0.5, 0.5, TILE - 1, TILE - 1);
+      g.globalAlpha = 1;
       break;
-    case 4: // cẩm thạch trắng kẻ vân
+    case 4: // cẩm thạch trắng kẻ vân thanh lịch
+      g.globalAlpha = 0.15;
       g.lineWidth = 1;
       g.beginPath();
       g.moveTo(0, 8 + rnd() * 6);
       g.bezierCurveTo(10, 2, 18, 26, 32, 14 + rnd() * 6);
       g.stroke();
+      g.globalAlpha = 0.12;
       g.strokeRect(0.5, 0.5, TILE - 1, TILE - 1);
+      g.globalAlpha = 1;
       break;
     default: // 5: đá vàng chạm vòng tròn đồng tâm (trống đồng)
-      g.globalAlpha = 0.45;
-      g.lineWidth = 1.5;
+      g.globalAlpha = 0.3;
+      g.lineWidth = 1.2;
       for (const r of [11, 6, 2]) {
         g.beginPath();
         g.arc(16, 16, r, 0, Math.PI * 2);
@@ -88,10 +93,10 @@ export function drawSolids(ctx: CanvasRenderingContext2D, level: Level, th: Them
     if (!visible(r, camX, W)) continue;
     ctx.fillStyle = th.tile.edge; // mép trên sáng
     ctx.fillRect(r.x * TILE, r.y * TILE, r.w * TILE, 3);
-    ctx.fillStyle = "rgba(0,0,0,0.18)"; // mép dưới tối
+    ctx.fillStyle = "rgba(0,0,0,0.12)"; // mép dưới tối nhẹ
     ctx.fillRect(r.x * TILE, (r.y + r.h) * TILE - 2, r.w * TILE, 2);
     if (th.era === 1 && r.y > 0 && r.y < level.h - 1) {
-      ctx.fillStyle = "#6E8B3D"; // cỏ ở mép trên
+      ctx.fillStyle = "#7E994D"; // cỏ ở mép trên
       for (let x = r.x * TILE + 3; x < (r.x + r.w) * TILE; x += 9) ctx.fillRect(x, r.y * TILE - 3, 2, 3);
     }
   }

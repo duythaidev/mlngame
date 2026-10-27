@@ -10,8 +10,8 @@ const SRC: Record<SoundName, string> = {
 };
 
 const VOLUME: Record<SoundName, number> = {
-  jump: 0.5,
-  restart: 0.8,
+  jump: 0.3,
+  restart: 1,
 };
 
 const cache = new Map<SoundName, HTMLAudioElement>();

@@ -391,7 +391,8 @@ const PAINT: Record<PropKind, Paint> = {
 /** Vẽ đạo cụ trong khung nhìn (ctx đã translate theo camera). */
 export function drawProps(ctx: CanvasRenderingContext2D, level: Level, th: Theme, camX: number, W: number, t: number): void {
   ctx.save();
-  ctx.globalAlpha = 0.9;
+  ctx.globalAlpha = 0.65;
   for (const p of placeProps(level)) if (p.x > camX - 120 && p.x < camX + W + 120) PAINT[p.kind](ctx, p.x, p.y, th, t);
   ctx.restore();
 }
+

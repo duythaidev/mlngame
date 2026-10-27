@@ -1,1232 +1,1289 @@
 /* ==========================================================================
            1. HỆ THỐNG DESIGN TOKENS & BẢNG MÀU 5 THỜI KỲ (ERA COLOR TOKENS)
            ========================================================================== */
-        :root {
-            /* Default: Level 1 (1919–1946 · Sepia Cách Mạng) */
-            --era-bg: #F4EBD9;
-            --era-primary: #4A3220;
-            --era-red: #B5382A;
-            --era-gold: #C9A24A;
-            --era-accent: #8C583A;
-            --era-surface: #F8F4EA;
-            --ink: #231811;
-            --paper-cream: #F8F4EA;
-            --paper-kraft: #E6D7BE;
-            --ui-scale: 1;
-            --transition-era: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+:root {
+  /* Default: Level 1 (1919–1946 · Sepia Cách Mạng) */
+  --era-bg: #f4ebd9;
+  --era-primary: #4a3220;
+  --era-red: #b5382a;
+  --era-gold: #c9a24a;
+  --era-accent: #8c583a;
+  --era-surface: #f8f4ea;
+  --ink: #231811;
+  --paper-cream: #f8f4ea;
+  --paper-kraft: #e6d7be;
+  --ui-scale: 1;
+  --transition-era: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
 
-        /* Level 1: 1919–1946 (Sepia) */
-        [data-era="1"] {
-            --era-bg: #F4EBD9;
-            --era-primary: #4A3220;
-            --era-red: #B5382A;
-            --era-gold: #C9A24A;
-            --era-accent: #7A4B2A;
-            --era-surface: #F8F4EA;
-        }
+/* Level 1: 1919–1946 (Sepia) */
+[data-era="1"] {
+  --era-bg: #f4ebd9;
+  --era-primary: #4a3220;
+  --era-red: #b5382a;
+  --era-gold: #c9a24a;
+  --era-accent: #7a4b2a;
+  --era-surface: #f8f4ea;
+}
 
-        /* Level 2: 1976–1986 (Bao cấp & Đổi mới) */
-        [data-era="2"] {
-            --era-bg: #E5E9EC;
-            --era-primary: #37474F;
-            --era-red: #A4533A;
-            --era-gold: #D9B84A;
-            --era-accent: #8FA3AD;
-            --era-surface: #F4F1EA;
-        }
+/* Level 2: 1976–1986 (Bao cấp & Đổi mới) */
+[data-era="2"] {
+  --era-bg: #e5e9ec;
+  --era-primary: #37474f;
+  --era-red: #a4533a;
+  --era-gold: #d9b84a;
+  --era-accent: #8fa3ad;
+  --era-surface: #f4f1ea;
+}
 
-        /* Level 3: 1991–1995 (Nền móng pháp quyền) */
-        [data-era="3"] {
-            --era-bg: #F4EFE0;
-            --era-primary: #1D5B4F;
-            --era-red: #C62828;
-            --era-gold: #D4A338;
-            --era-accent: #2E8B7A;
-            --era-surface: #FAF7F0;
-        }
+/* Level 3: 1991–1995 (Nền móng pháp quyền) */
+[data-era="3"] {
+  --era-bg: #f4efe0;
+  --era-primary: #1d5b4f;
+  --era-red: #c62828;
+  --era-gold: #d4a338;
+  --era-accent: #2e8b7a;
+  --era-surface: #faf7f0;
+}
 
-        /* Level 4: 2001–2022 (Hiến định) */
-        [data-era="4"] {
-            --era-bg: #E9ECF1;
-            --era-primary: #14305C;
-            --era-red: #C62828;
-            --era-gold: #D9A92B;
-            --era-accent: #1E4682;
-            --era-surface: #F7F9FC;
-        }
+/* Level 4: 2001–2022 (Hiến định) */
+[data-era="4"] {
+  --era-bg: #e9ecf1;
+  --era-primary: #14305c;
+  --era-red: #c62828;
+  --era-gold: #d9a92b;
+  --era-accent: #1e4682;
+  --era-surface: #f7f9fc;
+}
 
-        /* Level 5: Câu trả lời (Hoàng kim & Đỏ cờ) */
-        [data-era="5"] {
-            --era-bg: #FDF6E4;
-            --era-primary: #7C131E;
-            --era-red: #C8102E;
-            --era-gold: #E3B23C;
-            --era-accent: #F28C38;
-            --era-surface: #FFFDF7;
-        }
+/* Level 5: Câu trả lời (Hoàng kim & Đỏ cờ) */
+[data-era="5"] {
+  --era-bg: #fdf6e4;
+  --era-primary: #7c131e;
+  --era-red: #c8102e;
+  --era-gold: #e3b23c;
+  --era-accent: #f28c38;
+  --era-surface: #fffdf7;
+}
 
-        /* Reset CHỈ trong các khối minh họa (không đụng body / trang game). :where() giữ độ ưu tiên = 0. */
-        :where(.ui-block-ribbon, .ui-block-polaroid-wrapper, .ui-block-splash-banner, .ui-block-conclusion-poster, .ui-block-portal-card),
-        :where(.ui-block-ribbon, .ui-block-polaroid-wrapper, .ui-block-splash-banner, .ui-block-conclusion-poster, .ui-block-portal-card) * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+/* Reset CHỈ trong các khối minh họa (không đụng body / trang game). :where() giữ độ ưu tiên = 0. */
+:where(
+  .ui-block-ribbon,
+  .ui-block-polaroid-wrapper,
+  .ui-block-splash-banner,
+  .ui-block-conclusion-poster,
+  .ui-block-portal-card
+),
+:where(
+    .ui-block-ribbon,
+    .ui-block-polaroid-wrapper,
+    .ui-block-splash-banner,
+    .ui-block-conclusion-poster,
+    .ui-block-portal-card
+  )
+  * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-        /* Font helpers */
-        .font-oswald { font-family: 'Oswald', sans-serif; }
-        .font-serif-vn { font-family: 'Playfair Display', Georgia, serif; }
-        .font-mono-code { font-family: 'JetBrains Mono', monospace; }
+/* Font helpers */
+.font-oswald {
+  font-family: "Oswald", sans-serif;
+}
+.font-mono-code {
+  font-family: "JetBrains Mono", monospace;
+}
 
-        /* Hạt giấy & nét khắc gỗ (Paper Grain Texture Overlay) */
-        .paper-texture {
-            background-image: radial-gradient(rgba(35, 24, 17, 0.055) 1px, transparent 0);
-            background-size: 12px 12px;
-        }
+/* Hạt giấy & nét khắc gỗ (Paper Grain Texture Overlay) */
+.paper-texture {
+  background-image: radial-gradient(rgba(35, 24, 17, 0.055) 1px, transparent 0);
+  background-size: 12px 12px;
+}
 
-        /* Hiệu ứng đóng dấu nảy nhẹ (Stamp Slam Keyframes) */
-        @keyframes stampSlam {
-            0% {
-                opacity: 0;
-                transform: scale(2.15) rotate(var(--stamp-rot, -12deg));
-            }
-            60% {
-                opacity: 1;
-                transform: scale(0.92) rotate(var(--stamp-rot, -12deg));
-            }
-            80% {
-                transform: scale(1.04) rotate(var(--stamp-rot, -12deg));
-            }
-            100% {
-                opacity: 0.94;
-                transform: scale(1) rotate(var(--stamp-rot, -12deg));
-            }
-        }
+/* Hiệu ứng đóng dấu nảy nhẹ (Stamp Slam Keyframes) */
+@keyframes stampSlam {
+  0% {
+    opacity: 0;
+    transform: scale(2.15) rotate(var(--stamp-rot, -12deg));
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.92) rotate(var(--stamp-rot, -12deg));
+  }
+  80% {
+    transform: scale(1.04) rotate(var(--stamp-rot, -12deg));
+  }
+  100% {
+    opacity: 0.94;
+    transform: scale(1) rotate(var(--stamp-rot, -12deg));
+  }
+}
 
-        .animate-stamp {
-            animation: stampSlam 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
+.animate-stamp {
+  animation: stampSlam 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
 
-        /* Hiệu ứng nhịp thở hào quang (Pulse Glow Ring) */
-        @keyframes pulseGlowRing {
-            0%, 100% {
-                box-shadow: 0 0 0 0 rgba(227, 178, 60, 0.7), 0 0 14px rgba(198, 40, 40, 0.55);
-            }
-            50% {
-                box-shadow: 0 0 0 8px rgba(227, 178, 60, 0), 0 0 24px rgba(227, 178, 60, 0.9);
-            }
-        }
+/* Hiệu ứng nhịp thở hào quang (Pulse Glow Ring) */
+@keyframes pulseGlowRing {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(227, 178, 60, 0.7),
+      0 0 14px rgba(198, 40, 40, 0.55);
+  }
+  50% {
+    box-shadow:
+      0 0 0 8px rgba(227, 178, 60, 0),
+      0 0 24px rgba(227, 178, 60, 0.9);
+  }
+}
 
-        /* ==========================================================================
+/* ==========================================================================
            2. THANH ĐIỀU KHIỂN SHOWCASE (TOP CONTROL BAR)
            ========================================================================== */
-        .showcase-header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: rgba(22, 18, 15, 0.94);
-            backdrop-filter: blur(12px);
-            border-bottom: 2px solid var(--era-gold);
-            padding: 12px 20px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55);
-        }
+.showcase-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(22, 18, 15, 0.94);
+  backdrop-filter: blur(12px);
+  border-bottom: 2px solid var(--era-gold);
+  padding: 12px 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55);
+}
 
-        .header-inner {
-            max-width: 1440px;
-            margin: 0 auto;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-        }
+.header-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
 
-        .brand-badge {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+.brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
-        .brand-star {
-            width: 42px;
-            height: 42px;
-            background: var(--era-red);
-            border: 2px solid var(--era-gold);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #FFD700;
-            font-size: 22px;
-            box-shadow: 0 4px 12px rgba(181, 56, 42, 0.45);
-            transition: var(--transition-era);
-        }
+.brand-star {
+  width: 42px;
+  height: 42px;
+  background: var(--era-red);
+  border: 2px solid var(--era-gold);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffd700;
+  font-size: 22px;
+  box-shadow: 0 4px 12px rgba(181, 56, 42, 0.45);
+  transition: var(--transition-era);
+}
 
-        .era-switcher {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            background: #0E0B09;
-            padding: 5px;
-            border-radius: 12px;
-            border: 1px solid rgba(201, 162, 74, 0.3);
-        }
+.era-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  background: #0e0b09;
+  padding: 5px;
+  border-radius: 12px;
+  border: 1px solid rgba(201, 162, 74, 0.3);
+}
 
-        .era-btn {
-            cursor: pointer;
-            border: 1px solid transparent;
-            background: transparent;
-            color: #D6C7B2;
-            font-family: 'Be Vietnam Pro', sans-serif;
-            font-size: 12px;
-            font-weight: 700;
-            padding: 8px 13px;
-            border-radius: 8px;
-            transition: all 0.25s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+.era-btn {
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #d6c7b2;
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 13px;
+  border-radius: 8px;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
-        .era-btn:hover {
-            background: rgba(255, 255, 255, 0.07);
-            color: #FFF;
-        }
+.era-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
 
-        .era-btn.active {
-            background: var(--era-red);
-            color: #FFFDF7;
-            border-color: var(--era-gold);
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
-        }
+.era-btn.active {
+  background: var(--era-red);
+  color: #fffdf7;
+  border-color: var(--era-gold);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+}
 
-        .era-swatch {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.6);
-        }
+.era-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
 
-        /* Bố cục lưới Showcase */
-        .showcase-container {
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 28px 20px 64px;
-            display: flex;
-            flex-direction: column;
-            gap: 36px;
-            transform: scale(var(--ui-scale));
-            transform-origin: top center;
-            transition: transform 0.25s ease;
-        }
+/* Bố cục lưới Showcase */
+.showcase-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 28px 20px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  transform: scale(var(--ui-scale));
+  transform-origin: top center;
+  transition: transform 0.25s ease;
+}
 
-        .block-stage {
-            background: rgba(34, 28, 24, 0.78);
-            border: 1px solid rgba(201, 162, 74, 0.28);
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-            position: relative;
-        }
+.block-stage {
+  background: rgba(34, 28, 24, 0.78);
+  border: 1px solid rgba(201, 162, 74, 0.28);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
 
-        .stage-label-bar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 1px dashed rgba(201, 162, 74, 0.25);
-        }
+.stage-label-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(201, 162, 74, 0.25);
+}
 
-        .stage-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--era-gold);
-            background: rgba(201, 162, 74, 0.12);
-            border: 1px solid rgba(201, 162, 74, 0.35);
-            padding: 4px 10px;
-            border-radius: 6px;
-        }
+.stage-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--era-gold);
+  background: rgba(201, 162, 74, 0.12);
+  border: 1px solid rgba(201, 162, 74, 0.35);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
 
-        .stage-title {
-            color: #F8F4EA;
-            font-size: 16px;
-            font-weight: 800;
-        }
+.stage-title {
+  color: #f8f4ea;
+  font-size: 16px;
+  font-weight: 800;
+}
 
-        .stage-desc {
-            color: #B0A292;
-            font-size: 12px;
-        }
+.stage-desc {
+  color: #b0a292;
+  font-size: 12px;
+}
 
-        /* ==========================================================================
+/* ==========================================================================
            📦 KHỐI 2: DẢI TEM HUY HIỆU & TIẾN TRÌNH LỊCH SỬ (72px Top Ribbon)
            ========================================================================== */
-        .ui-block-ribbon {
-            --w: 1180px;
-            font-size: calc(var(--w) / 74); /* 1em ≈ 16px co giãn tỷ lệ */
-            width: 100%;
-            min-height: 4.6em; /* ~74px */
-            background: var(--era-bg);
-            border: 0.16em solid var(--ink);
-            border-radius: 0.65em;
-            box-shadow: 
-                0 0.25em 0 var(--ink),
-                0 0.65em 1.4em rgba(0, 0, 0, 0.4);
-            padding: 0.55em 1.1em;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1em;
-            position: relative;
-            transition: var(--transition-era);
-        }
+.ui-block-ribbon {
+  --w: 1180px;
+  font-size: calc(var(--w) / 74); /* 1em ≈ 16px co giãn tỷ lệ */
+  width: 100%;
+  min-height: 4.6em; /* ~74px */
+  background: var(--era-bg);
+  border: 0.16em solid var(--ink);
+  border-radius: 0.65em;
+  box-shadow:
+    0 0.25em 0 var(--ink),
+    0 0.65em 1.4em rgba(0, 0, 0, 0.4);
+  padding: 0.55em 1.1em;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  position: relative;
+  transition: var(--transition-era);
+}
 
-        /* Đường viền chỉ đôi cổ điển */
-        .ui-block-ribbon::before {
-            content: "";
-            position: absolute;
-            inset: 0.2em;
-            border: 0.06em dashed var(--era-primary);
-            border-radius: 0.45em;
-            pointer-events: none;
-            opacity: 0.45;
-        }
+/* Đường viền chỉ đôi cổ điển */
+.ui-block-ribbon::before {
+  content: "";
+  position: absolute;
+  inset: 0.2em;
+  border: 0.06em dashed var(--era-primary);
+  border-radius: 0.45em;
+  pointer-events: none;
+  opacity: 0.45;
+}
 
-        /* Trục thời gian 5 mốc bên trái */
-        .timeline-track-wrap {
-            flex: 1;
-            min-width: 18em;
-            display: flex;
-            align-items: center;
-            position: relative;
-            padding: 0.2em 0.4em;
-        }
+/* Trục thời gian 5 mốc bên trái */
+.timeline-track-wrap {
+  flex: 1;
+  min-width: 18em;
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding: 0.2em 0.4em;
+}
 
-        .timeline-metal-bar {
-            position: absolute;
-            left: 1.5em;
-            right: 1.5em;
-            top: 42%;
-            height: 0.42em;
-            background: #D5C7B2;
-            border: 0.1em solid var(--ink);
-            border-radius: 99px;
-            overflow: hidden;
-            z-index: 1;
-        }
+.timeline-metal-bar {
+  position: absolute;
+  left: 1.5em;
+  right: 1.5em;
+  top: 42%;
+  height: 0.42em;
+  background: #d5c7b2;
+  border: 0.1em solid var(--ink);
+  border-radius: 99px;
+  overflow: hidden;
+  z-index: 1;
+}
 
-        .timeline-metal-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--era-red), var(--era-gold));
-            width: 20%;
-            transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-        }
+.timeline-metal-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--era-red), var(--era-gold));
+  width: 20%;
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
 
-        .timeline-nodes {
-            position: relative;
-            z-index: 2;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+.timeline-nodes {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-        .tl-node {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.25em;
-            cursor: pointer;
-            user-select: none;
-        }
+.tl-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25em;
+  cursor: pointer;
+  user-select: none;
+}
 
-        .tl-node-circle {
-            width: 1.75em;
-            height: 1.75em;
-            border-radius: 50%;
-            background: var(--paper-cream);
-            border: 0.15em solid var(--ink);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Oswald', sans-serif;
-            font-size: 0.75em;
-            font-weight: 700;
-            color: var(--ink);
-            transition: all 0.3s ease;
-            box-shadow: 0 0.12em 0 var(--ink);
-        }
+.tl-node-circle {
+  width: 1.75em;
+  height: 1.75em;
+  border-radius: 50%;
+  background: var(--paper-cream);
+  border: 0.15em solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Oswald", sans-serif;
+  font-size: 0.75em;
+  font-weight: 700;
+  color: var(--ink);
+  transition: all 0.3s ease;
+  box-shadow: 0 0.12em 0 var(--ink);
+}
 
-        .tl-node.passed .tl-node-circle {
-            background: var(--era-gold);
-            color: var(--ink);
-        }
+.tl-node.passed .tl-node-circle {
+  background: var(--era-gold);
+  color: var(--ink);
+}
 
-        .tl-node.current .tl-node-circle {
-            background: var(--era-red);
-            color: #FFF;
-            transform: scale(1.18);
-            animation: pulseGlowRing 2s infinite;
-        }
+.tl-node.current .tl-node-circle {
+  background: var(--era-red);
+  color: #fff;
+  transform: scale(1.18);
+  animation: pulseGlowRing 2s infinite;
+}
 
-        .tl-node-label {
-            font-family: 'Oswald', sans-serif;
-            font-size: 0.68em;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--era-primary);
-            letter-spacing: 0.03em;
-            background: rgba(248, 244, 234, 0.9);
-            padding: 0.05em 0.35em;
-            border-radius: 0.25em;
-            border: 0.06em solid rgba(35, 24, 17, 0.2);
-        }
+.tl-node-label {
+  font-family: "Oswald", sans-serif;
+  font-size: 0.68em;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--era-primary);
+  letter-spacing: 0.03em;
+  background: rgba(248, 244, 234, 0.9);
+  padding: 0.05em 0.35em;
+  border-radius: 0.25em;
+  border: 0.06em solid rgba(35, 24, 17, 0.2);
+}
 
-        .tl-node.current .tl-node-label {
-            background: var(--ink);
-            color: var(--era-gold);
-        }
+.tl-node.current .tl-node-label {
+  background: var(--ink);
+  color: var(--era-gold);
+}
 
-        /* Hàng 5 Con Tem Thư Răng Cưa (Postage Stamps 40x40px equiv) */
-        .stamp-collection-row {
-            display: flex;
-            align-items: center;
-            gap: 0.75em;
-            padding-left: 0.8em;
-            border-left: 0.12em solid rgba(35, 24, 17, 0.2);
-        }
+/* Hàng 5 Con Tem Thư Răng Cưa (Postage Stamps 40x40px equiv) */
+.stamp-collection-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  padding-left: 0.8em;
+  border-left: 0.12em solid rgba(35, 24, 17, 0.2);
+}
 
-        .postage-stamp-wrap {
-            position: relative;
-            width: 3.1em;
-            height: 3.1em;
-            cursor: pointer;
-            transition: transform 0.25s ease;
-        }
+.postage-stamp-wrap {
+  position: relative;
+  width: 3.1em;
+  height: 3.1em;
+  cursor: pointer;
+  transition: transform 0.25s ease;
+}
 
-        .postage-stamp-wrap:hover {
-            transform: translateY(-0.18em) rotate(-3deg);
-        }
+.postage-stamp-wrap:hover {
+  transform: translateY(-0.18em) rotate(-3deg);
+}
 
-        /* Viền tem răng cưa bằng CSS radial-gradient */
-        .postage-stamp {
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 0.25em 0.25em, transparent 0.16em, #EFE4C8 0.17em) -0.25em -0.25em / 0.5em 0.5em;
-            padding: 0.26em;
-            filter: drop-shadow(0 0.14em 0.18em rgba(0,0,0,0.28));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+/* Viền tem răng cưa bằng CSS radial-gradient */
+.postage-stamp {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+      circle at 0.25em 0.25em,
+      transparent 0.16em,
+      #efe4c8 0.17em
+    ) -0.25em -0.25em /
+    0.5em 0.5em;
+  padding: 0.26em;
+  filter: drop-shadow(0 0.14em 0.18em rgba(0, 0, 0, 0.28));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-        .postage-stamp-inner {
-            width: 100%;
-            height: 100%;
-            background: #FBF5E6;
-            border: 0.09em solid var(--era-red);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.12em;
-            position: relative;
-            overflow: hidden;
-        }
+.postage-stamp-inner {
+  width: 100%;
+  height: 100%;
+  background: #fbf5e6;
+  border: 0.09em solid var(--era-red);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.12em;
+  position: relative;
+  overflow: hidden;
+}
 
-        .stamp-year-tiny {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.44em;
-            font-weight: 800;
-            color: var(--era-red);
-            line-height: 1;
-            letter-spacing: -0.03em;
-        }
+.stamp-year-tiny {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.44em;
+  font-weight: 800;
+  color: var(--era-red);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
 
-        .stamp-icon-svg {
-            width: 1.35em;
-            height: 1.35em;
-            color: var(--era-primary);
-        }
+.stamp-icon-svg {
+  width: 1.35em;
+  height: 1.35em;
+  color: var(--era-primary);
+}
 
-        /* Con dấu tròn bưu chính đóng đè lên góc tem 14 độ */
-        .postal-cancel-seal {
-            position: absolute;
-            right: -0.45em;
-            bottom: -0.3em;
-            width: 2.35em;
-            height: 2.35em;
-            border: 0.11em double rgba(198, 40, 40, 0.85);
-            border-radius: 50%;
-            background: rgba(255, 248, 231, 0.72);
-            color: #B71C1C;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.34em;
-            font-weight: 800;
-            line-height: 1.05;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            transform: rotate(14deg);
-            pointer-events: none;
-            box-shadow: inset 0 0 0 0.08em rgba(198, 40, 40, 0.35);
-            z-index: 4;
-        }
+/* Con dấu tròn bưu chính đóng đè lên góc tem 14 độ */
+.postal-cancel-seal {
+  position: absolute;
+  right: -0.45em;
+  bottom: -0.3em;
+  width: 2.35em;
+  height: 2.35em;
+  border: 0.11em double rgba(198, 40, 40, 0.85);
+  border-radius: 50%;
+  background: rgba(255, 248, 231, 0.72);
+  color: #b71c1c;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.34em;
+  font-weight: 800;
+  line-height: 1.05;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transform: rotate(14deg);
+  pointer-events: none;
+  box-shadow: inset 0 0 0 0.08em rgba(198, 40, 40, 0.35);
+  z-index: 4;
+}
 
-        .postage-stamp-wrap.locked {
-            opacity: 0.45;
-            filter: grayscale(0.8);
-        }
-        .postage-stamp-wrap.locked .postal-cancel-seal {
-            display: none;
-        }
+.postage-stamp-wrap.locked {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+}
+.postage-stamp-wrap.locked .postal-cancel-seal {
+  display: none;
+}
 
-        /* ==========================================================================
+/* ==========================================================================
            📦 KHỐI 1: THẺ TƯ LIỆU DÁN GHIM (Story Archive Polaroid Card - 296px base)
            ========================================================================== */
-        .ui-block-polaroid-wrapper {
-            --w: 310px;
-            font-size: calc(var(--w) / 19.375); /* 1em ≈ 16px khi rộng 310px */
-            width: var(--w);
-            position: relative;
-            margin: 0.8em auto;
-            padding: 0.6em;
-            user-select: none;
-        }
+.ui-block-polaroid-wrapper {
+  --w: 310px;
+  font-size: calc(var(--w) / 19.375); /* 1em ≈ 16px khi rộng 310px */
+  width: var(--w);
+  position: relative;
+  margin: 0.8em auto;
+  padding: 0.6em;
+  user-select: none;
+}
 
-        /* 2 lớp giấy chồng so le bên dưới tạo độ dày (-3deg và +2deg) */
-        .paper-stack-layer-1 {
-            position: absolute;
-            inset: 0.5em 0.4em;
-            background: #DECDB0;
-            border: 0.14em solid var(--ink);
-            border-radius: 0.4em;
-            transform: rotate(-3.2deg);
-            box-shadow: 0 0.4em 0.9em rgba(0, 0, 0, 0.28);
-            z-index: 1;
-        }
+/* 2 lớp giấy chồng so le bên dưới tạo độ dày (-3deg và +2deg) */
+.paper-stack-layer-1 {
+  position: absolute;
+  inset: 0.5em 0.4em;
+  background: #decdb0;
+  border: 0.14em solid var(--ink);
+  border-radius: 0.4em;
+  transform: rotate(-3.2deg);
+  box-shadow: 0 0.4em 0.9em rgba(0, 0, 0, 0.28);
+  z-index: 1;
+}
 
-        .paper-stack-layer-2 {
-            position: absolute;
-            inset: 0.5em 0.4em;
-            background: #EAE0C8;
-            border: 0.14em solid var(--ink);
-            border-radius: 0.4em;
-            transform: rotate(2.2deg);
-            box-shadow: 0 0.35em 0.75em rgba(0, 0, 0, 0.22);
-            z-index: 2;
-        }
+.paper-stack-layer-2 {
+  position: absolute;
+  inset: 0.5em 0.4em;
+  background: #eae0c8;
+  border: 0.14em solid var(--ink);
+  border-radius: 0.4em;
+  transform: rotate(2.2deg);
+  box-shadow: 0 0.35em 0.75em rgba(0, 0, 0, 0.22);
+  z-index: 2;
+}
 
-        /* Tấm thẻ chính: Nền giấy kem hạt mờ, xoay -1.5deg */
-        .polaroid-main-card {
-            position: relative;
-            z-index: 3;
-            background-color: var(--era-surface);
-            border: 0.16em solid var(--ink);
-            border-radius: 0.45em;
-            padding: 1.05em 0.95em 0.9em;
-            transform: rotate(-1.5deg);
-            box-shadow: 
-                0 0.3em 0 var(--ink),
-                0 0.85em 1.6em rgba(0, 0, 0, 0.38);
-            transition: var(--transition-era);
-        }
+/* Tấm thẻ chính: Nền giấy kem hạt mờ, xoay -1.5deg */
+.polaroid-main-card {
+  position: relative;
+  z-index: 3;
+  background-color: var(--era-surface);
+  border: 0.16em solid var(--ink);
+  border-radius: 0.45em;
+  padding: 1.05em 0.95em 0.9em;
+  transform: rotate(-1.5deg);
+  box-shadow:
+    0 0.3em 0 var(--ink),
+    0 0.85em 1.6em rgba(0, 0, 0, 0.38);
+  transition: var(--transition-era);
+}
 
-        .polaroid-main-card:hover {
-            transform: rotate(-0.5deg) translateY(-0.15em);
-        }
+.polaroid-main-card:hover {
+  transform: rotate(-0.5deg) translateY(-0.15em);
+}
 
-        /* Ghim bấm đỏ (Red Push-Pin) + Kẹp giấy kim loại ở góc trên */
-        .push-pin-svg {
-            position: absolute;
-            top: -0.95em;
-            left: 1.15em;
-            width: 2.3em;
-            height: 2.3em;
-            z-index: 10;
-            filter: drop-shadow(0.18em 0.28em 0.2em rgba(0, 0, 0, 0.45));
-        }
+/* Ghim bấm đỏ (Red Push-Pin) + Kẹp giấy kim loại ở góc trên */
+.push-pin-svg {
+  position: absolute;
+  top: -0.95em;
+  left: 1.15em;
+  width: 2.3em;
+  height: 2.3em;
+  z-index: 10;
+  filter: drop-shadow(0.18em 0.28em 0.2em rgba(0, 0, 0, 0.45));
+}
 
-        .paper-clip-svg {
-            position: absolute;
-            top: -0.65em;
-            right: 1.1em;
-            width: 1.5em;
-            height: 2.8em;
-            z-index: 10;
-            filter: drop-shadow(0.1em 0.15em 0.12em rgba(0, 0, 0, 0.35));
-        }
+.paper-clip-svg {
+  position: absolute;
+  top: -0.65em;
+  right: 1.1em;
+  width: 1.5em;
+  height: 2.8em;
+  z-index: 10;
+  filter: drop-shadow(0.1em 0.15em 0.12em rgba(0, 0, 0, 0.35));
+}
 
-        /* Khung ảnh Polaroid viền trắng 8px (.5em) */
-        .polaroid-photo-frame {
-            background: #FFFFFF;
-            padding: 0.5em 0.5em 0.65em 0.5em;
-            border: 0.12em solid var(--ink);
-            box-shadow: 
-                inset 0 0 0 0.06em rgba(0,0,0,0.08),
-                0 0.2em 0.45em rgba(0,0,0,0.14);
-            margin-bottom: 0.75em;
-            position: relative;
-        }
+/* Khung ảnh Polaroid viền trắng 8px (.5em) */
+.polaroid-photo-frame {
+  background: #ffffff;
+  padding: 0.5em 0.5em 0.65em 0.5em;
+  border: 0.12em solid var(--ink);
+  box-shadow:
+    inset 0 0 0 0.06em rgba(0, 0, 0, 0.08),
+    0 0.2em 0.45em rgba(0, 0, 0, 0.14);
+  margin-bottom: 0.75em;
+  position: relative;
+}
 
-        /* Băng keo giấy dán góc ảnh */
-        .polaroid-tape {
-            position: absolute;
-            top: -0.45em;
-            right: -0.55em;
-            width: 3.2em;
-            height: 1.1em;
-            background: rgba(238, 224, 185, 0.82);
-            border: 0.06em solid rgba(35, 24, 17, 0.25);
-            transform: rotate(28deg);
-            box-shadow: 0 0.08em 0.15em rgba(0,0,0,0.12);
-            z-index: 5;
-        }
+/* Băng keo giấy dán góc ảnh */
+.polaroid-tape {
+  position: absolute;
+  top: -0.45em;
+  right: -0.55em;
+  width: 3.2em;
+  height: 1.1em;
+  background: rgba(238, 224, 185, 0.82);
+  border: 0.06em solid rgba(35, 24, 17, 0.25);
+  transform: rotate(28deg);
+  box-shadow: 0 0.08em 0.15em rgba(0, 0, 0, 0.12);
+  z-index: 5;
+}
 
-        .polaroid-art-viewport {
-            width: 100%;
-            aspect-ratio: 1 / 0.88;
-            background: var(--era-bg);
-            border: 0.08em solid var(--ink);
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+.polaroid-art-viewport {
+  width: 100%;
+  aspect-ratio: 1 / 0.88;
+  background: var(--era-bg);
+  border: 0.08em solid var(--ink);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-        .polaroid-art-viewport img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
+.polaroid-art-viewport img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 
-        .polaroid-art-fallback {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+.polaroid-art-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-        /* Nhãn tư liệu lịch sử */
-        .archive-eyebrow {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.64em;
-            font-weight: 800;
-            letter-spacing: 0.05em;
-            color: var(--era-red);
-            text-transform: uppercase;
-            margin-bottom: 0.15em;
-        }
+/* Nhãn tư liệu lịch sử */
+.archive-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.64em;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--era-red);
+  text-transform: uppercase;
+  margin-bottom: 0.15em;
+}
 
-        /* Năm lịch sử to lớn (Oswald 36-44px) với vệt cọ quét */
-        .archive-year-wrap {
-            position: relative;
-            display: inline-block;
-            margin-bottom: 0.25em;
-        }
+/* Năm lịch sử to lớn (Oswald 36-44px) với vệt cọ quét */
+.archive-year-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 0.25em;
+}
 
-        .archive-year-brush {
-            position: absolute;
-            left: -0.15em;
-            right: -0.35em;
-            bottom: 0.08em;
-            height: 0.36em;
-            background: var(--era-gold);
-            opacity: 0.65;
-            transform: skewX(-12deg) rotate(-1deg);
-            border-radius: 0.1em;
-            z-index: 1;
-        }
+.archive-year-brush {
+  position: absolute;
+  left: -0.15em;
+  right: -0.35em;
+  bottom: 0.08em;
+  height: 0.36em;
+  background: var(--era-gold);
+  opacity: 0.65;
+  transform: skewX(-12deg) rotate(-1deg);
+  border-radius: 0.1em;
+  z-index: 1;
+}
 
-        .archive-year-num {
-            position: relative;
-            z-index: 2;
-            font-family: 'Oswald', sans-serif;
-            font-size: 2.45em; /* ~39px */
-            font-weight: 700;
-            line-height: 1;
-            color: var(--ink);
-            letter-spacing: 0.02em;
-            text-shadow: 0.04em 0.04em 0 var(--paper-cream);
-        }
+.archive-year-num {
+  position: relative;
+  z-index: 2;
+  font-family: "Oswald", sans-serif;
+  font-size: 2.45em; /* ~39px */
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+  text-shadow: 0.04em 0.04em 0 var(--paper-cream);
+}
 
-        /* Cụm tiêu đề sự kiện */
-        .archive-event-title {
-            font-family: 'Oswald', sans-serif;
-            font-size: 1.08em;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--era-primary);
-            line-height: 1.2;
-            margin-bottom: 0.45em;
-            letter-spacing: 0.01em;
-        }
+/* Cụm tiêu đề sự kiện */
+.archive-event-title {
+  font-family: "Oswald", sans-serif;
+  font-size: 1.08em;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--era-primary);
+  line-height: 1.2;
+  margin-bottom: 0.45em;
+  letter-spacing: 0.01em;
+}
 
-        /* Dòng trích dẫn đắt giá */
-        .archive-quote-box {
-            background: rgba(230, 215, 190, 0.48);
-            border-left: 0.22em solid var(--era-red);
-            padding: 0.45em 0.55em;
-            margin-bottom: 0.55em;
-            border-radius: 0 0.25em 0.25em 0;
-        }
+/* Dòng trích dẫn đắt giá */
+.archive-quote-box {
+  background: rgba(230, 215, 190, 0.48);
+  border-left: 0.22em solid var(--era-red);
+  padding: 0.45em 0.55em;
+  margin-bottom: 0.55em;
+  border-radius: 0 0.25em 0.25em 0;
+}
 
-        .archive-quote-text {
-            font-family: 'Playfair Display', serif;
-            font-size: 0.74em;
-            font-weight: 700;
-            font-style: italic;
-            text-transform: uppercase;
-            line-height: 1.38;
-            color: var(--ink);
-        }
+.archive-quote-text {
+  font-family: Inter, serif;
+  font-size: 0.74em;
+  font-weight: 700;
+  font-style: italic;
+  text-transform: uppercase;
+  line-height: 1.38;
+  color: var(--ink);
+}
 
-        /* Nguồn hiến định / giáo trình */
-        .archive-source {
-            font-size: 0.68em;
-            font-weight: 700;
-            color: var(--era-primary);
-            display: flex;
-            align-items: center;
-            gap: 0.35em;
-            padding-top: 0.35em;
-            border-top: 0.08em dashed rgba(35, 24, 17, 0.25);
-            margin-bottom: 0.65em;
-        }
+/* Nguồn hiến định / giáo trình */
+.archive-source {
+  font-size: 0.68em;
+  font-weight: 700;
+  color: var(--era-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  padding-top: 0.35em;
+  border-top: 0.08em dashed rgba(35, 24, 17, 0.25);
+  margin-bottom: 0.65em;
+}
 
-        /* Dải 5 chấm chặng đường (● ● ◉ ○ ○) */
-        .archive-step-dots {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.45em;
-            padding-top: 0.2em;
-        }
+/* Dải 5 chấm chặng đường (● ● ◉ ○ ○) */
+.archive-step-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45em;
+  padding-top: 0.2em;
+}
 
-        .step-dot-btn {
-            width: 1.35em;
-            height: 0.72em;
-            border-radius: 99px;
-            border: 0.11em solid var(--ink);
-            background: var(--paper-cream);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-        }
+.step-dot-btn {
+  width: 1.35em;
+  height: 0.72em;
+  border-radius: 99px;
+  border: 0.11em solid var(--ink);
+  background: var(--paper-cream);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
 
-        .step-dot-btn.done {
-            background: var(--era-gold);
-        }
+.step-dot-btn.done {
+  background: var(--era-gold);
+}
 
-        .step-dot-btn.active {
-            width: 2.1em;
-            background: var(--era-red);
-            box-shadow: 0 0 0 0.12em rgba(181, 56, 42, 0.3);
-        }
+.step-dot-btn.active {
+  width: 2.1em;
+  background: var(--era-red);
+  box-shadow: 0 0 0 0.12em rgba(181, 56, 42, 0.3);
+}
 
-        /* ==========================================================================
+/* ==========================================================================
            📦 KHỐI 3: THẺ NIÊM PHONG MỞ MÀN THỜI KỲ (Era Splash Seal Banner)
            ========================================================================== */
-        .ui-block-splash-banner {
-            --w: 760px;
-            font-size: calc(var(--w) / 47.5); /* 1em ≈ 16px */
-            width: 100%;
-            max-width: var(--w);
-            margin: 0 auto;
-            border-radius: 0.85em;
-            border: 0.2em solid var(--ink);
-            background: #1B1410;
-            box-shadow: 
-                0 0.35em 0 var(--ink),
-                0 1em 2.2em rgba(0, 0, 0, 0.5);
-            position: relative;
-            overflow: hidden;
-            aspect-ratio: 16 / 9.2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5em;
-        }
+.ui-block-splash-banner {
+  --w: 760px;
+  font-size: calc(var(--w) / 47.5); /* 1em ≈ 16px */
+  width: 100%;
+  max-width: var(--w);
+  margin: 0 auto;
+  border-radius: 0.85em;
+  border: 0.2em solid var(--ink);
+  background: #1b1410;
+  box-shadow:
+    0 0.35em 0 var(--ink),
+    0 1em 2.2em rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9.2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5em;
+}
 
-        /* Viền kép cổ điển bên trong panô */
-        .splash-double-frame {
-            position: absolute;
-            inset: 0.55em;
-            border: 0.12em solid var(--era-gold);
-            border-radius: 0.5em;
-            pointer-events: none;
-            z-index: 3;
-            box-shadow: inset 0 0 0 0.18em rgba(227, 178, 60, 0.22);
-        }
+/* Viền kép cổ điển bên trong panô */
+.splash-double-frame {
+  position: absolute;
+  inset: 0.55em;
+  border: 0.12em solid var(--era-gold);
+  border-radius: 0.5em;
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: inset 0 0 0 0.18em rgba(227, 178, 60, 0.22);
+}
 
-        /* Nền tranh bìa /art/era{L}.webp + lớp phủ tối 50% */
-        .splash-bg-art {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            overflow: hidden;
-        }
+/* Nền tranh bìa /art/era{L}.webp + lớp phủ tối 50% */
+.splash-bg-art {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+}
 
-        .splash-bg-art img,
-        .splash-bg-art svg {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            filter: contrast(1.08) saturate(1.1);
-        }
+.splash-bg-art img,
+.splash-bg-art svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: contrast(1.08) saturate(1.1);
+}
 
-        .splash-dark-overlay {
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at center, rgba(18, 12, 9, 0.38) 0%, rgba(12, 8, 6, 0.78) 100%);
-            z-index: 2;
-        }
+.splash-dark-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(18, 12, 9, 0.38) 0%,
+    rgba(12, 8, 6, 0.78) 100%
+  );
+  z-index: 2;
+}
 
-        /* Con dấu niêm phong tròn đỏ khổng lồ (Wax/Ink Seal) xoay -12deg */
-        .giant-wax-seal {
-            --stamp-rot: -12deg;
-            position: relative;
-            z-index: 4;
-            width: 11.2em;
-            height: 11.2em;
-            transform: rotate(-12deg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1.4em;
-            filter: drop-shadow(0 0.5em 0.9em rgba(0, 0, 0, 0.65));
-            cursor: pointer;
-        }
+/* Con dấu niêm phong tròn đỏ khổng lồ (Wax/Ink Seal) xoay -12deg */
+.giant-wax-seal {
+  --stamp-rot: -12deg;
+  position: relative;
+  z-index: 4;
+  width: 11.2em;
+  height: 11.2em;
+  transform: rotate(-12deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.4em;
+  filter: drop-shadow(0 0.5em 0.9em rgba(0, 0, 0, 0.65));
+  cursor: pointer;
+}
 
-        .wax-seal-svg {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-        }
+.wax-seal-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
 
-        .wax-seal-content {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            color: #FFFDF5;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 0.8em;
-        }
+.wax-seal-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  color: #fffdf5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8em;
+}
 
-        .wax-seal-sub {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.52em;
-            font-weight: 800;
-            letter-spacing: 0.14em;
-            color: #FFD54F;
-            text-transform: uppercase;
-        }
+.wax-seal-sub {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.52em;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #ffd54f;
+  text-transform: uppercase;
+}
 
-        .wax-seal-star {
-            font-size: 1.65em;
-            color: #FFD700;
-            line-height: 1;
-            margin: 0.08em 0;
-            text-shadow: 0 0.08em 0.2em rgba(0,0,0,0.45);
-        }
+.wax-seal-star {
+  font-size: 1.65em;
+  color: #ffd700;
+  line-height: 1;
+  margin: 0.08em 0;
+  text-shadow: 0 0.08em 0.2em rgba(0, 0, 0, 0.45);
+}
 
-        .wax-seal-years {
-            font-family: 'Oswald', sans-serif;
-            font-size: 1.45em;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            color: #FFFFFF;
-            background: rgba(0, 0, 0, 0.24);
-            padding: 0.05em 0.45em;
-            border-radius: 0.2em;
-            border-top: 0.06em solid rgba(255, 215, 0, 0.6);
-            border-bottom: 0.06em solid rgba(255, 215, 0, 0.6);
-        }
+.wax-seal-years {
+  font-family: "Oswald", sans-serif;
+  font-size: 1.45em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.24);
+  padding: 0.05em 0.45em;
+  border-radius: 0.2em;
+  border-top: 0.06em solid rgba(255, 215, 0, 0.6);
+  border-bottom: 0.06em solid rgba(255, 215, 0, 0.6);
+}
 
-        /* Dải biểu ngữ (Ribbon) vắt ngang phía dưới */
-        .splash-ribbon-banner {
-            position: relative;
-            z-index: 5;
-            background: linear-gradient(180deg, #D32F2F 0%, #9A1B1B 100%);
-            border: 0.14em solid #FFD54F;
-            border-radius: 0.35em;
-            padding: 0.55em 1.8em;
-            box-shadow: 
-                0 0.25em 0 #4A0E0E,
-                0 0.6em 1.2em rgba(0, 0, 0, 0.55);
-            text-align: center;
-            max-width: 92%;
-        }
+/* Dải biểu ngữ (Ribbon) vắt ngang phía dưới */
+.splash-ribbon-banner {
+  position: relative;
+  z-index: 5;
+  background: linear-gradient(180deg, #d32f2f 0%, #9a1b1b 100%);
+  border: 0.14em solid #ffd54f;
+  border-radius: 0.35em;
+  padding: 0.55em 1.8em;
+  box-shadow:
+    0 0.25em 0 #4a0e0e,
+    0 0.6em 1.2em rgba(0, 0, 0, 0.55);
+  text-align: center;
+  max-width: 92%;
+}
 
-        .splash-ribbon-banner::before,
-        .splash-ribbon-banner::after {
-            content: "★";
-            color: #FFD54F;
-            font-size: 0.85em;
-            margin: 0 0.55em;
-        }
+.splash-ribbon-banner::before,
+.splash-ribbon-banner::after {
+  content: "★";
+  color: #ffd54f;
+  font-size: 0.85em;
+  margin: 0 0.55em;
+}
 
-        .splash-ribbon-text {
-            font-family: 'Oswald', sans-serif;
-            font-size: 1.15em;
-            font-weight: 700;
-            color: #FFFDF7;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            text-shadow: 0 0.1em 0.15em rgba(0, 0, 0, 0.5);
-        }
+.splash-ribbon-text {
+  font-family: "Oswald", sans-serif;
+  font-size: 1.15em;
+  font-weight: 700;
+  color: #fffdf7;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0.1em 0.15em rgba(0, 0, 0, 0.5);
+}
 
-        /* ==========================================================================
+/* ==========================================================================
            📦 KHỐI 5: CỔNG CHÀO MỐC LỊCH SỬ (Milestone Portal Arch Block)
            ========================================================================== */
-        .ui-block-portal-card {
-            --w: 540px;
-            font-size: calc(var(--w) / 33.75);
-            width: 100%;
-            max-width: var(--w);
-            margin: 0 auto;
-            background: var(--era-bg);
-            border: 0.18em solid var(--ink);
-            border-radius: 0.75em;
-            padding: 1.1em;
-            box-shadow: 
-                0 0.35em 0 var(--ink),
-                0 0.9em 1.8em rgba(0, 0, 0, 0.4);
-            position: relative;
-            transition: var(--transition-era);
-        }
+.ui-block-portal-card {
+  --w: 540px;
+  font-size: calc(var(--w) / 33.75);
+  width: 100%;
+  max-width: var(--w);
+  margin: 0 auto;
+  background: var(--era-bg);
+  border: 0.18em solid var(--ink);
+  border-radius: 0.75em;
+  padding: 1.1em;
+  box-shadow:
+    0 0.35em 0 var(--ink),
+    0 0.9em 1.8em rgba(0, 0, 0, 0.4);
+  position: relative;
+  transition: var(--transition-era);
+}
 
-        .portal-stage-viewport {
-            width: 100%;
-            aspect-ratio: 4 / 3.1;
-            background: linear-gradient(180deg, rgba(35,24,17,0.06) 0%, rgba(35,24,17,0.18) 100%);
-            border: 0.12em solid var(--ink);
-            border-radius: 0.5em;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-        }
+.portal-stage-viewport {
+  width: 100%;
+  aspect-ratio: 4 / 3.1;
+  background: linear-gradient(
+    180deg,
+    rgba(35, 24, 17, 0.06) 0%,
+    rgba(35, 24, 17, 0.18) 100%
+  );
+  border: 0.12em solid var(--ink);
+  border-radius: 0.5em;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
 
-        .portal-svg-scene {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
+.portal-svg-scene {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
 
-        /* Thanh chọn nhanh 5 mẫu cổng kiến trúc */
-        .portal-mini-tabs {
-            display: flex;
-            justify-content: center;
-            gap: 0.4em;
-            margin-top: 0.75em;
-            flex-wrap: wrap;
-        }
+/* Thanh chọn nhanh 5 mẫu cổng kiến trúc */
+.portal-mini-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.4em;
+  margin-top: 0.75em;
+  flex-wrap: wrap;
+}
 
-        .portal-mini-btn {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.68em;
-            font-weight: 700;
-            padding: 0.35em 0.65em;
-            border-radius: 0.35em;
-            border: 0.1em solid var(--ink);
-            background: var(--paper-cream);
-            color: var(--ink);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
+.portal-mini-btn {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.68em;
+  font-weight: 700;
+  padding: 0.35em 0.65em;
+  border-radius: 0.35em;
+  border: 0.1em solid var(--ink);
+  background: var(--paper-cream);
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.2s;
+}
 
-        .portal-mini-btn.active {
-            background: var(--era-primary);
-            color: #FFF;
-            border-color: var(--era-gold);
-        }
+.portal-mini-btn.active {
+  background: var(--era-primary);
+  color: #fff;
+  border-color: var(--era-gold);
+}
 
-        /* ==========================================================================
+/* ==========================================================================
            📦 KHỐI 4: KHỐI POSTER LUẬN ĐIỂM KẾT LUẬN (3-Pillar Conclusion Poster)
            ========================================================================== */
-        .ui-block-conclusion-poster {
-            --w: 1140px;
-            font-size: calc(var(--w) / 71.25); /* 1em ≈ 16px */
-            width: 100%;
-            background: #2C0B0E;
-            border: 0.22em solid #E3B23C;
-            border-radius: 0.9em;
-            padding: 1.8em 1.6em;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 
-                0 0.4em 0 #140405,
-                0 1.2em 2.8em rgba(0, 0, 0, 0.65),
-                inset 0 0 0 0.25em rgba(227, 178, 60, 0.25);
-            color: #FFFDF7;
-        }
+.ui-block-conclusion-poster {
+  --w: 1140px;
+  font-size: calc(var(--w) / 71.25); /* 1em ≈ 16px */
+  width: 100%;
+  background: #2c0b0e;
+  border: 0.22em solid #e3b23c;
+  border-radius: 0.9em;
+  padding: 1.8em 1.6em;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 0.4em 0 #140405,
+    0 1.2em 2.8em rgba(0, 0, 0, 0.65),
+    inset 0 0 0 0.25em rgba(227, 178, 60, 0.25);
+  color: #fffdf7;
+}
 
-        /* Viền góc hoa văn kỷ hà Đông Sơn */
-        .poster-corner-ornament {
-            position: absolute;
-            width: 3.2em;
-            height: 3.2em;
-            border: 0.16em solid #E3B23C;
-            pointer-events: none;
-            z-index: 3;
-        }
-        .poster-corner-tl { top: 0.55em; left: 0.55em; border-right: none; border-bottom: none; }
-        .poster-corner-tr { top: 0.55em; right: 0.55em; border-left: none; border-bottom: none; }
-        .poster-corner-bl { bottom: 0.55em; left: 0.55em; border-right: none; border-top: none; }
-        .poster-corner-br { bottom: 0.55em; right: 0.55em; border-left: none; border-top: none; }
+/* Viền góc hoa văn kỷ hà Đông Sơn */
+.poster-corner-ornament {
+  position: absolute;
+  width: 3.2em;
+  height: 3.2em;
+  border: 0.16em solid #e3b23c;
+  pointer-events: none;
+  z-index: 3;
+}
+.poster-corner-tl {
+  top: 0.55em;
+  left: 0.55em;
+  border-right: none;
+  border-bottom: none;
+}
+.poster-corner-tr {
+  top: 0.55em;
+  right: 0.55em;
+  border-left: none;
+  border-bottom: none;
+}
+.poster-corner-bl {
+  bottom: 0.55em;
+  left: 0.55em;
+  border-right: none;
+  border-top: none;
+}
+.poster-corner-br {
+  bottom: 0.55em;
+  right: 0.55em;
+  border-left: none;
+  border-top: none;
+}
 
-        /* Họa tiết Trống đồng Đông Sơn mạ vàng chìm phía sau */
-        .dong-son-drum-bg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 52em;
-            height: 52em;
-            transform: translate(-50%, -50%);
-            opacity: 0.14;
-            pointer-events: none;
-            z-index: 1;
-            animation: spinSlow 90s linear infinite;
-        }
+/* Họa tiết Trống đồng Đông Sơn mạ vàng chìm phía sau */
+.dong-son-drum-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 52em;
+  height: 52em;
+  transform: translate(-50%, -50%);
+  opacity: 0.14;
+  pointer-events: none;
+  z-index: 1;
+  animation: spinSlow 90s linear infinite;
+}
 
-        @keyframes spinSlow {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
+@keyframes spinSlow {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
 
-        .poster-content-layer {
-            position: relative;
-            z-index: 4;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1.25em;
-        }
+.poster-content-layer {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25em;
+}
 
-        /* Hộp câu hỏi lớn ở trên: Nền giấy kraft viền đỏ */
-        .poster-question-box {
-            background: #F4EBD9;
-            color: var(--ink);
-            border: 0.18em solid #C8102E;
-            border-radius: 0.55em;
-            padding: 0.85em 1.6em;
-            max-width: 48em;
-            width: 100%;
-            text-align: center;
-            box-shadow: 
-                0 0.28em 0 var(--ink),
-                0 0.6em 1.2em rgba(0, 0, 0, 0.35);
-            position: relative;
-        }
+/* Hộp câu hỏi lớn ở trên: Nền giấy kraft viền đỏ */
+.poster-question-box {
+  background: #f4ebd9;
+  color: var(--ink);
+  border: 0.18em solid #c8102e;
+  border-radius: 0.55em;
+  padding: 0.85em 1.6em;
+  max-width: 48em;
+  width: 100%;
+  text-align: center;
+  box-shadow:
+    0 0.28em 0 var(--ink),
+    0 0.6em 1.2em rgba(0, 0, 0, 0.35);
+  position: relative;
+}
 
-        .poster-question-tag {
-            display: inline-block;
-            background: #C8102E;
-            color: #FFD700;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.68em;
-            font-weight: 800;
-            text-transform: uppercase;
-            padding: 0.2em 0.75em;
-            border-radius: 99px;
-            margin-bottom: 0.35em;
-            letter-spacing: 0.06em;
-        }
+.poster-question-tag {
+  display: inline-block;
+  background: #c8102e;
+  color: #ffd700;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.68em;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 0.2em 0.75em;
+  border-radius: 99px;
+  margin-bottom: 0.35em;
+  letter-spacing: 0.06em;
+}
 
-        .poster-question-text {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.28em;
-            font-weight: 800;
-            font-style: italic;
-            color: #231811;
-            line-height: 1.3;
-        }
+.poster-question-text {
+  font-family: Inter, serif;
+  font-size: 1.28em;
+  font-weight: 800;
+  font-style: italic;
+  color: #231811;
+  line-height: 1.3;
+}
 
-        /* Cụm Huy hiệu khẳng định lớn nhất: KHÔNG MÂU THUẪN + Con dấu bảo chứng */
-        .poster-affirmation-cluster {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: center;
-            gap: 1.2em;
-            margin: 0.2em 0;
-        }
+/* Cụm Huy hiệu khẳng định lớn nhất: KHÔNG MÂU THUẪN + Con dấu bảo chứng */
+.poster-affirmation-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2em;
+  margin: 0.2em 0;
+}
 
-        .affirmation-main-badge {
-            background: linear-gradient(180deg, #E51C23 0%, #9E0B12 100%);
-            border: 0.2em solid #FFD700;
-            border-radius: 0.5em;
-            padding: 0.45em 1.6em;
-            box-shadow: 
-                0 0.28em 0 #5C0508,
-                0 0 2em rgba(227, 178, 60, 0.45),
-                inset 0 0.08em 0 rgba(255, 255, 255, 0.35);
-            text-align: center;
-            transform: rotate(-1deg);
-        }
+.affirmation-main-badge {
+  background: linear-gradient(180deg, #e51c23 0%, #9e0b12 100%);
+  border: 0.2em solid #ffd700;
+  border-radius: 0.5em;
+  padding: 0.45em 1.6em;
+  box-shadow:
+    0 0.28em 0 #5c0508,
+    0 0 2em rgba(227, 178, 60, 0.45),
+    inset 0 0.08em 0 rgba(255, 255, 255, 0.35);
+  text-align: center;
+  transform: rotate(-1deg);
+}
 
-        .affirmation-main-text {
-            font-family: 'Oswald', sans-serif;
-            font-size: 2.5em;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            color: #FFFDF7;
-            text-transform: uppercase;
-            text-shadow: 
-                0 0.07em 0 #5C0508,
-                0 0.14em 0.25em rgba(0, 0, 0, 0.55);
-            line-height: 1.05;
-        }
+.affirmation-main-text {
+  font-family: "Oswald", sans-serif;
+  font-size: 2.5em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #fffdf7;
+  text-transform: uppercase;
+  text-shadow:
+    0 0.07em 0 #5c0508,
+    0 0.14em 0.25em rgba(0, 0, 0, 0.55);
+  line-height: 1.05;
+}
 
-        .constitutional-gold-seal {
-            --stamp-rot: 8deg;
-            background: radial-gradient(circle, #FFE082 0%, #D9A92B 70%, #9E7312 100%);
-            color: #231811;
-            border: 0.16em double #231811;
-            border-radius: 99px;
-            padding: 0.55em 1.15em;
-            font-family: 'Oswald', sans-serif;
-            font-size: 0.95em;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            box-shadow: 0 0.25em 0.6em rgba(0, 0, 0, 0.45);
-            transform: rotate(8deg);
-            display: flex;
-            align-items: center;
-            gap: 0.45em;
-        }
+.constitutional-gold-seal {
+  --stamp-rot: 8deg;
+  background: radial-gradient(circle, #ffe082 0%, #d9a92b 70%, #9e7312 100%);
+  color: #231811;
+  border: 0.16em double #231811;
+  border-radius: 99px;
+  padding: 0.55em 1.15em;
+  font-family: "Oswald", sans-serif;
+  font-size: 0.95em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 0.25em 0.6em rgba(0, 0, 0, 0.45);
+  transform: rotate(8deg);
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+}
 
-        /* 3 Thẻ Luận Điểm Cốt Lõi (Bento Cards 3 cột) */
-        .pillars-bento-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.1em;
-            width: 100%;
-        }
+/* 3 Thẻ Luận Điểm Cốt Lõi (Bento Cards 3 cột) */
+.pillars-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.1em;
+  width: 100%;
+}
 
-        .pillar-bento-card {
-            background: #F8F4EA;
-            color: var(--ink);
-            border: 0.16em solid var(--ink);
-            border-radius: 0.6em;
-            padding: 1.15em 1em;
-            box-shadow: 
-                0 0.3em 0 var(--ink),
-                0 0.65em 1.3em rgba(0, 0, 0, 0.35);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: transform 0.25s ease;
-        }
+.pillar-bento-card {
+  background: #f8f4ea;
+  color: var(--ink);
+  border: 0.16em solid var(--ink);
+  border-radius: 0.6em;
+  padding: 1.15em 1em;
+  box-shadow:
+    0 0.3em 0 var(--ink),
+    0 0.65em 1.3em rgba(0, 0, 0, 0.35);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.25s ease;
+}
 
-        .pillar-bento-card:hover {
-            transform: translateY(-0.25em);
-        }
+.pillar-bento-card:hover {
+  transform: translateY(-0.25em);
+}
 
-        .pillar-num-badge {
-            position: absolute;
-            top: -0.65em;
-            right: 0.85em;
-            background: #C8102E;
-            color: #FFD700;
-            border: 0.12em solid var(--ink);
-            font-family: 'Oswald', sans-serif;
-            font-size: 0.8em;
-            font-weight: 700;
-            padding: 0.1em 0.55em;
-            border-radius: 0.25em;
-            box-shadow: 0 0.15em 0 var(--ink);
-        }
+.pillar-num-badge {
+  position: absolute;
+  top: -0.65em;
+  right: 0.85em;
+  background: #c8102e;
+  color: #ffd700;
+  border: 0.12em solid var(--ink);
+  font-family: "Oswald", sans-serif;
+  font-size: 0.8em;
+  font-weight: 700;
+  padding: 0.1em 0.55em;
+  border-radius: 0.25em;
+  box-shadow: 0 0.15em 0 var(--ink);
+}
 
-        .pillar-icon-box {
-            width: 3.1em;
-            height: 3.1em;
-            border-radius: 0.5em;
-            background: #EFE4C8;
-            border: 0.12em solid var(--ink);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 0.7em;
-            box-shadow: 0.15em 0.15em 0 var(--era-gold);
-        }
+.pillar-icon-box {
+  width: 3.1em;
+  height: 3.1em;
+  border-radius: 0.5em;
+  background: #efe4c8;
+  border: 0.12em solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.7em;
+  box-shadow: 0.15em 0.15em 0 var(--era-gold);
+}
 
-        .pillar-card-title {
-            font-family: 'Oswald', sans-serif;
-            font-size: 1.12em;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: #7C131E;
-            margin-bottom: 0.4em;
-            letter-spacing: 0.02em;
-        }
+.pillar-card-title {
+  font-family: "Oswald", sans-serif;
+  font-size: 1.12em;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #7c131e;
+  margin-bottom: 0.4em;
+  letter-spacing: 0.02em;
+}
 
-        .pillar-card-quote {
-            font-family: 'Playfair Display', serif;
-            font-size: 0.85em;
-            font-weight: 700;
-            font-style: italic;
-            line-height: 1.42;
-            color: var(--ink);
-            margin-bottom: 0.65em;
-            flex: 1;
-        }
+.pillar-card-quote {
+  font-family: Inter, serif;
+  font-size: 0.85em;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1.42;
+  color: var(--ink);
+  margin-bottom: 0.65em;
+  flex: 1;
+}
 
-        .pillar-card-legal {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.68em;
-            font-weight: 700;
-            color: #4A3220;
-            background: #E6D7BE;
-            padding: 0.35em 0.55em;
-            border-radius: 0.3em;
-            border-left: 0.25em solid #C8102E;
-        }
+.pillar-card-legal {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.68em;
+  font-weight: 700;
+  color: #4a3220;
+  background: #e6d7be;
+  padding: 0.35em 0.55em;
+  border-radius: 0.3em;
+  border-left: 0.25em solid #c8102e;
+}
 
-        /* Responsive cho màn hình nhỏ */
-        @media (max-width: 1024px) {
-            .ui-block-ribbon {
-                font-size: 12px;
-            }
-            .ui-block-splash-banner {
-                font-size: 12px;
-            }
-            .ui-block-conclusion-poster {
-                font-size: 13px;
-            }
-            .pillars-bento-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+/* Responsive cho màn hình nhỏ */
+@media (max-width: 1024px) {
+  .ui-block-ribbon {
+    font-size: 12px;
+  }
+  .ui-block-splash-banner {
+    font-size: 12px;
+  }
+  .ui-block-conclusion-poster {
+    font-size: 13px;
+  }
+  .pillars-bento-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* ==========================================================================
    BẢN 5 — GẮN CÁC KHỐI VÀO MÀN CHƠI (theme sáng)
@@ -1234,42 +1291,107 @@
 
 /* --- Tem bay vào ô khi qua cổng mốc (spec B3) --- */
 @keyframes stampFly {
-  0% { transform: translate(-38vw, 32vh) scale(1.4) rotate(-20deg); opacity: 0; }
-  15% { opacity: 1; }
-  75% { transform: translate(0, 0) scale(1.4) rotate(4deg); }
-  100% { transform: translate(0, 0) scale(1) rotate(0); }
+  0% {
+    transform: translate(-38vw, 32vh) scale(1.4) rotate(-20deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  75% {
+    transform: translate(0, 0) scale(1.4) rotate(4deg);
+  }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0);
+  }
 }
 .postage-stamp-wrap.stamp-fly {
   animation: stampFly 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
   z-index: 30;
 }
 .postage-stamp-wrap.stamp-fly .postage-stamp {
-  box-shadow: 0 0 0 0.18em #FFD54F, 0 0 1.2em rgba(255, 213, 79, 0.9);
+  box-shadow:
+    0 0 0 0.18em #ffd54f,
+    0 0 1.2em rgba(255, 213, 79, 0.9);
   transition: box-shadow 0.3s 0.7s;
 }
 
 /* --- Khung tư liệu: lật thẻ + Ken Burns + "đang rửa ảnh" (spec B4) --- */
 @keyframes cardFlip {
-  0% { transform: perspective(900px) rotateY(-90deg) rotate(-1.5deg); opacity: 0.2; }
-  100% { transform: perspective(900px) rotateY(0) rotate(-1.5deg); opacity: 1; }
+  0% {
+    transform: perspective(900px) rotateY(-90deg) rotate(-1.5deg);
+    opacity: 0.2;
+  }
+  100% {
+    transform: perspective(900px) rotateY(0) rotate(-1.5deg);
+    opacity: 1;
+  }
 }
-.polaroid-main-card.card-flip { animation: cardFlip 0.4s ease-out both; }
-@keyframes kenBurns { from { transform: scale(1.04); } to { transform: scale(1); } }
-.polaroid-art-viewport { position: relative; overflow: hidden; }
-.polaroid-art-viewport.kenburns img { animation: kenBurns 1.2s ease-out both; }
-@keyframes developing { 0%, 100% { filter: sepia(0.6) brightness(1.08); } 50% { filter: sepia(0.2) brightness(0.96); } }
-.polaroid-art-viewport.developing .polaroid-art-fallback { animation: developing 1.4s ease-in-out infinite; }
-.archive-year-num.is-long { font-size: 1.6em; }
-.step-dot-btn:disabled { cursor: default; }
+.polaroid-main-card.card-flip {
+  animation: cardFlip 0.4s ease-out both;
+}
+@keyframes kenBurns {
+  from {
+    transform: scale(1.04);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.polaroid-art-viewport {
+  position: relative;
+  overflow: hidden;
+}
+.polaroid-art-viewport.kenburns img {
+  animation: kenBurns 1.2s ease-out both;
+}
+@keyframes developing {
+  0%,
+  100% {
+    filter: sepia(0.6) brightness(1.08);
+  }
+  50% {
+    filter: sepia(0.2) brightness(0.96);
+  }
+}
+.polaroid-art-viewport.developing .polaroid-art-fallback {
+  animation: developing 1.4s ease-in-out infinite;
+}
+.archive-year-num.is-long {
+  font-size: 1.6em;
+}
+.step-dot-btn:disabled {
+  cursor: default;
+}
 
 /* Biến thể "bottom": dưới canvas, ảnh 160 px, chữ cạnh ảnh */
-.ui-block-polaroid-wrapper.polaroid-bottom { --w: 100%; width: 100%; max-width: 800px; font-size: 14px; }
-.polaroid-bottom .polaroid-main-card { display: flex; gap: 1em; align-items: flex-start; transform: none; }
-.polaroid-bottom .polaroid-main-card.card-flip { animation-name: none; }
-.polaroid-bottom .polaroid-photo-frame { flex: 0 0 160px; width: 160px; }
-.polaroid-bottom .polaroid-text { flex: 1; min-width: 0; }
+.ui-block-polaroid-wrapper.polaroid-bottom {
+  --w: 100%;
+  width: 100%;
+  max-width: 800px;
+  font-size: 14px;
+}
+.polaroid-bottom .polaroid-main-card {
+  display: flex;
+  gap: 1em;
+  align-items: flex-start;
+  transform: none;
+}
+.polaroid-bottom .polaroid-main-card.card-flip {
+  animation-name: none;
+}
+.polaroid-bottom .polaroid-photo-frame {
+  flex: 0 0 160px;
+  width: 160px;
+}
+.polaroid-bottom .polaroid-text {
+  flex: 1;
+  min-width: 0;
+}
 .polaroid-bottom .paper-stack-layer-1,
-.polaroid-bottom .paper-stack-layer-2 { display: none; }
+.polaroid-bottom .paper-stack-layer-2 {
+  display: none;
+}
 
 /* --- Thẻ mở level phủ canvas (spec B5) --- */
 .ui-block-splash-banner.splash-overlay {
@@ -1282,18 +1404,34 @@
   box-shadow: none;
   z-index: 20;
   font-size: 13px;
-  transition: transform 0.4s ease-in, opacity 0.4s ease-in;
+  transition:
+    transform 0.4s ease-in,
+    opacity 0.4s ease-in;
 }
-.splash-overlay .splash-bg-art img { animation: splashZoom 2s linear both; }
-@keyframes splashZoom { from { transform: scale(1); } to { transform: scale(1.08); } }
-.splash-overlay.is-leaving { transform: translateX(-100%); opacity: 0.4; }
+.splash-overlay .splash-bg-art img {
+  animation: splashZoom 2s linear both;
+}
+@keyframes splashZoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+.splash-overlay.is-leaving {
+  transform: translateX(-100%);
+  opacity: 0.4;
+}
 
 /* --- Poster kết: nền sáng (spec B6 + yêu cầu theme sáng) --- */
 .ui-block-conclusion-poster {
-  background: #FFF8E8 url("/art/poster.webp") center / cover no-repeat;
+  background: #fff8e8 url("/art/poster.webp") center / cover no-repeat;
   color: var(--ink);
-  border-color: #C9A24A;
-  box-shadow: 0 0.4em 0 #9E7312, 0 1em 2em rgba(0, 0, 0, 0.18);
+  border-color: #c9a24a;
+  box-shadow:
+    0 0.4em 0 #9e7312,
+    0 1em 2em rgba(0, 0, 0, 0.18);
 }
 .ui-block-conclusion-poster::before {
   content: "";
@@ -1308,19 +1446,22 @@
   gap: 1.2em;
   margin-bottom: 1.2em;
 }
-.poster-era-strip::before { /* sợi dây nối 5 ảnh */
+.poster-era-strip::before {
+  /* sợi dây nối 5 ảnh */
   content: "";
   position: absolute;
   left: 8%;
   right: 8%;
   top: 3em;
-  border-top: 0.2em solid #8B5A2B;
+  border-top: 0.2em solid #8b5a2b;
 }
 .poster-era-thumb {
   position: relative;
   width: 6em;
   text-align: center;
-  font: 600 0.75em/1.2 'Oswald', sans-serif;
+  font:
+    600 0.75em/1.2 "Oswald",
+    sans-serif;
 }
 .poster-era-thumb img {
   width: 6em;
@@ -1332,8 +1473,20 @@
   display: block;
   margin-bottom: 0.3em;
 }
-@keyframes letterIn { from { opacity: 0; transform: translateY(0.4em) scale(1.3); } to { opacity: 1; transform: none; } }
-.poster-letter { display: inline-block; animation: letterIn 0.3s ease-out both; }
+@keyframes letterIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.4em) scale(1.3);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.poster-letter {
+  display: inline-block;
+  animation: letterIn 0.3s ease-out both;
+}
 .poster-stamp-grid {
   display: grid;
   grid-template-columns: repeat(25, 1fr);
@@ -1344,9 +1497,11 @@
   aspect-ratio: 1;
   display: grid;
   place-items: center;
-  border: 0.12em dashed #B9A06E;
+  border: 0.12em dashed #b9a06e;
   border-radius: 0.2em;
-  font: 700 0.5em/1 'JetBrains Mono', monospace;
+  font:
+    700 0.5em/1 "JetBrains Mono",
+    monospace;
   color: transparent;
   background: rgba(255, 255, 255, 0.5);
 }
@@ -1363,11 +1518,21 @@
   justify-content: center;
   margin-top: 1.2em;
 }
-.poster-footnote { font-size: 0.85em; color: #4A3220; }
+.poster-footnote {
+  font-size: 0.85em;
+  color: #4a3220;
+}
 @media (max-width: 700px) {
-  .poster-stamp-grid { grid-template-columns: repeat(10, 1fr); }
-  .poster-era-thumb { width: 4.5em; }
-  .poster-era-thumb img { width: 4.5em; height: 4.5em; }
+  .poster-stamp-grid {
+    grid-template-columns: repeat(10, 1fr);
+  }
+  .poster-era-thumb {
+    width: 4.5em;
+  }
+  .poster-era-thumb img {
+    width: 4.5em;
+    height: 4.5em;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1375,5 +1540,7 @@
   .polaroid-main-card.card-flip,
   .polaroid-art-viewport.kenburns img,
   .splash-overlay .splash-bg-art img,
-  .poster-letter { animation: none; }
+  .poster-letter {
+    animation: none;
+  }
 }

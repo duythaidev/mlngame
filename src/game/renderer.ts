@@ -2,6 +2,7 @@
 // Điều phối vẽ một khung (bản 5). Hình vẽ nằm ở src/theme/*; file này chỉ đọc trạng thái và gọi theo thứ tự:
 // trời + nền 2 lớp → đạo cụ → gạch → gai → trần → cổng mốc → cửa → vật thể → dây → người → vật đang mang → hạt → góc tối.
 import { PHYS, PLAYER_SIZE, SLOT_COLORS, TILE, VIEW_W } from "../lib/constants";
+import { drawCharacter, MotionTracker, roleOf, SPRITE_H, SPRITE_W, type Motion } from "./characters";
 import { drawBackdrop, drawVignette } from "../theme/backdrop";
 import { drawCheckpointFlag, drawDoor, drawMilestone, milestones } from "../theme/gates";
 import {
@@ -76,6 +77,7 @@ const fx = {
   won: false,
   particles: new Particles(200),
   shake: new Shake(),
+  motion: new MotionTracker(), // tư thế đứng / đi của từng người
 };
 
 function resetFx(levelId: string, t: number): void {
@@ -86,6 +88,7 @@ function resetFx(levelId: string, t: number): void {
   fx.counts.clear();
   fx.won = false;
   fx.particles.clear();
+  fx.motion.reset();
   fx.lastT = t;
 }
 
@@ -98,82 +101,62 @@ function rose(id: number, now: boolean): boolean {
 
 // ------------------------------------------------------------------ người chơi, dây
 
-const imgCache = new Map<string, HTMLImageElement>();
-
-function getImage(src: string): HTMLImageElement | null {
-  let img = imgCache.get(src);
-  if (!img) {
-    img = new Image();
-    img.src = src;
-    imgCache.set(src, img);
-  }
-  return img.complete && img.naturalWidth > 0 ? img : null;
-}
+const SPRITE_PX = 2; // px màn hình mỗi ô pixel của sprite
 
 function slotColor(slot: string): string {
   const i = Number(slot.slice(1));
   return SLOT_COLORS[(Number.isFinite(i) ? i : 0) % SLOT_COLORS.length];
 }
 
-function drawPlayer(ctx: CanvasRenderingContext2D, p: DrawPlayer): void {
-  const size = Math.round(PLAYER_SIZE * TILE);
-  const x = Math.round(p.x * TILE - size / 2);
-  const y = Math.round(p.y * TILE - size / 2);
+/** Mặt đất dưới chân người chơi (px) = đáy hitbox. */
+function feetOf(p: DrawPlayer): number {
+  return Math.round((p.y + PLAYER_SIZE / 2) * TILE);
+}
 
-  ctx.fillStyle = "rgba(0,0,0,0.2)"; // bóng đổ dưới chân
+/** Nhân vật pixel theo vai + tư thế; vòng màu chỗ ngồi dưới chân và tên trên đầu để phân biệt người chơi. */
+function drawPlayer(ctx: CanvasRenderingContext2D, p: DrawPlayer, m: Motion): void {
+  const cx = p.x * TILE;
+  const feet = feetOf(p);
+  const color = slotColor(p.slot);
+
+  ctx.fillStyle = "rgba(0,0,0,0.2)"; // bóng đổ
   ctx.beginPath();
-  ctx.ellipse(x + size / 2, y + size + 2, size * 0.45, 3, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, feet + 1, 11, 3, 0, 0, Math.PI * 2);
   ctx.fill();
-
-  ctx.fillStyle = slotColor(p.slot);
-  ctx.fillRect(x, y - 5, 7, 7); // tai trái
-  ctx.fillRect(x + size - 7, y - 5, 7, 7); // tai phải
-  ctx.fillRect(x, y, size, size);
-
-  const img = p.avatar ? getImage(p.avatar) : null;
-  if (img) {
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(img, x + 3, y + 3, size - 6, size - 6);
-  } else {
-    ctx.fillStyle = INK;
-    ctx.fillRect(x + 6, y + 9, 4, 5);
-    ctx.fillRect(x + size - 10, y + 9, 4, 5);
-  }
-
-  ctx.strokeStyle = INK;
+  ctx.strokeStyle = color; // vòng màu chỗ ngồi
   ctx.lineWidth = 2;
-  ctx.strokeRect(x + 1, y + 1, size - 2, size - 2);
+  ctx.beginPath();
+  ctx.ellipse(cx, feet + 1, 12, 3.5, 0, 0, Math.PI * 2);
+  ctx.stroke();
 
-  ctx.font = "bold 11px sans-serif";
-  ctx.textAlign = "center";
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = "rgba(255,255,255,0.9)";
-  ctx.strokeText(p.name, x + size / 2, y - 9);
-  ctx.fillStyle = INK;
-  ctx.fillText(p.name, x + size / 2, y - 9);
+  drawCharacter(ctx, roleOf(p.avatar, p.slot), m.pose, m.frame, m.face, cx, feet, SPRITE_PX);
 }
 
 /** Người gây ra thua: rung mạnh rồi yếu dần, nháy đỏ, mắt thành dấu X. */
-function drawLostPlayer(ctx: CanvasRenderingContext2D, p: DrawPlayer, t: number): void {
-  const size = Math.round(PLAYER_SIZE * TILE);
+function drawLostPlayer(ctx: CanvasRenderingContext2D, p: DrawPlayer, m: Motion, t: number): void {
   const shake = Math.sin(t * 90) * 4 * Math.max(0, 1 - t / PHYS.loseDelay);
+  const still: Motion = { pose: "idle", frame: 0, face: m.face };
   ctx.save();
   ctx.translate(shake, 0);
-  drawPlayer(ctx, p);
-  const x = Math.round(p.x * TILE - size / 2);
-  const y = Math.round(p.y * TILE - size / 2);
+  drawPlayer(ctx, p, still);
+  const w = SPRITE_W * SPRITE_PX;
+  const h = SPRITE_H * SPRITE_PX;
+  const x0 = p.x * TILE - w / 2;
+  const y0 = feetOf(p) - h;
   if (Math.floor(t / 0.1) % 2 === 0) {
-    ctx.fillStyle = "rgba(255,40,40,0.6)";
-    ctx.fillRect(x, y - 5, size, size + 5);
+    ctx.fillStyle = "rgba(255,40,40,0.55)";
+    ctx.fillRect(x0, y0, w, h);
   }
   ctx.strokeStyle = "#fff";
   ctx.lineWidth = 2;
-  for (const ex of [x + 8, x + size - 8]) {
+  for (const col of [8.5, 11.5]) {
+    const ex = p.x * TILE + (col - SPRITE_W / 2) * SPRITE_PX * m.face; // vị trí mắt trong sprite (lật theo hướng)
+    const ey = y0 + 6.5 * SPRITE_PX;
     ctx.beginPath();
-    ctx.moveTo(ex - 3, y + 8);
-    ctx.lineTo(ex + 3, y + 16);
-    ctx.moveTo(ex + 3, y + 8);
-    ctx.lineTo(ex - 3, y + 16);
+    ctx.moveTo(ex - 3, ey - 3);
+    ctx.lineTo(ex + 3, ey + 3);
+    ctx.moveTo(ex + 3, ey - 3);
+    ctx.lineTo(ex - 3, ey + 3);
     ctx.stroke();
   }
   ctx.restore();
@@ -441,9 +424,10 @@ export function drawFrame(ctx: CanvasRenderingContext2D, level: Level, s: DrawSt
   for (let i = 0; i < players.length - 1; i++) drawRope(ctx, players[i], players[i + 1], t);
   const flagged = leaders(level, v, players);
   for (const p of players) {
-    if (flagged.includes(p)) drawLeaderFlag(ctx, p.x * TILE, (p.y - PLAYER_SIZE / 2) * TILE, t);
-    if (s.lose && p.slot === s.lose.slot) drawLostPlayer(ctx, p, s.lose.t);
-    else drawPlayer(ctx, p);
+    const m = fx.motion.update(p.slot, p.x, dt);
+    if (flagged.includes(p)) drawLeaderFlag(ctx, p.x * TILE, feetOf(p) - SPRITE_H * SPRITE_PX + 6, t);
+    if (s.lose && p.slot === s.lose.slot) drawLostPlayer(ctx, p, m, s.lose.t);
+    else drawPlayer(ctx, p, m);
   }
 
   // vật đang mang: lơ lửng 0,7 ô trên đầu, lắc ±8°
@@ -453,7 +437,7 @@ export function drawFrame(ctx: CanvasRenderingContext2D, level: Level, s: DrawSt
     if (!p) continue;
     const sp = o.spec as CarrySpec;
     ctx.save();
-    ctx.translate(p.x * TILE, (p.y - PLAYER_SIZE / 2 - 0.7) * TILE + Math.sin(t * 4) * 2);
+    ctx.translate(p.x * TILE, feetOf(p) - SPRITE_H * SPRITE_PX - 30 + Math.sin(t * 4) * 2); // trên tên người mang
     ctx.rotate(Math.sin(t * 3) * 0.14);
     drawCarryItem(ctx, sp.kind, 0, 0, labelText(sp.text ?? ""), constitutionYear(level.id), t, false);
     ctx.restore();
