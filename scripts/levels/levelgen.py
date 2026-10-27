@@ -103,8 +103,17 @@ class Seg:
     def conveyor(s, x0, x1, speed, y=12):
         s.area({"t": "conveyor", "speed": speed}, x0, x1, y, y)
 
-    def crumble(s, x0, x1, y=12):
-        s.area({"t": "crumble"}, x0, x1, y, y)
+    def crumble(s, x0, x1, y=12, stand=None, back=None, look=None):
+        """Sàn sụp. stand = giây đứng trước khi rung, back = giây biến mất rồi hiện lại (mặc định 0.8 / 3),
+        look = "theme" để vẽ theo thời kỳ (tem phiếu / đá) thay vì gạch nâu mặc định."""
+        spec = {"t": "crumble"}
+        if stand is not None:
+            spec["stand"] = stand
+        if back is not None:
+            spec["back"] = back
+        if look is not None:
+            spec["look"] = look
+        s.area(spec, x0, x1, y, y)
 
     def lift(s, x0, x1, rise, drop=False, need=None, y=12, label=None):
         spec = {"t": "lift", "rise": rise}

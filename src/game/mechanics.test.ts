@@ -318,3 +318,40 @@ describe("gai: va chạm theo hình tam giác", () => {
     expect(at(s.x + 0.85, s.y + 0.6)).toBe(true);
   });
 });
+
+describe("sàn sụp: thời gian tùy chỉnh", () => {
+  /** Đặt người lên sàn sụp rồi đo số giây tới khi sàn biến mất (và tới khi hiện lại). */
+  function times(spec: ObjSpec): { gone: number; back: number } {
+    const L = level([".S" + ".".repeat(W - 2)], { a: spec }, {}, ["a".repeat(8) + "#".repeat(W - 8), solid, solid, solid]);
+    const e = new GameEngine(L, slots(1));
+    const o = rt(e).objs.find((x) => x.body && (x as { phase?: number }).phase !== undefined)!;
+    let gone = -1;
+    let back = -1;
+    for (let f = 1; f <= 60 * 12; f++) {
+      e.update(1 / 60);
+      const ph = (o as unknown as { phase: number }).phase;
+      if (gone < 0 && ph === 2) {
+        gone = f / 60;
+        place(e, 0, 20, 11.6); // đứng sang phần nền đặc để sàn hiện lại được
+      }
+      if (gone > 0 && back < 0 && ph === 0) back = f / 60 - gone;
+    }
+    return { gone, back };
+  }
+
+  it("mặc định: sụp sau ~1,1 giây (0,8 đứng + 0,3 rung), hiện lại sau 3 giây", () => {
+    const t = times({ t: "crumble" });
+    expect(t.gone).toBeGreaterThan(1.0);
+    expect(t.gone).toBeLessThan(1.4);
+    expect(t.back).toBeGreaterThan(2.9);
+    expect(t.back).toBeLessThan(3.2);
+  });
+
+  it("stand = 2, back = 5 → sụp sau ~2,3 giây, hiện lại sau 5 giây", () => {
+    const t = times({ t: "crumble", stand: 2, back: 5 });
+    expect(t.gone).toBeGreaterThan(2.2);
+    expect(t.gone).toBeLessThan(2.6);
+    expect(t.back).toBeGreaterThan(4.9);
+    expect(t.back).toBeLessThan(5.2);
+  });
+});

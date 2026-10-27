@@ -156,12 +156,12 @@ export function drawConveyor(ctx: CanvasRenderingContext2D, r: R, th: Theme, spe
 }
 
 /** Sàn sụp: L2 ghép tem phiếu ố vàng, còn lại gạch/đá nứt; rung + số đếm ngược; đã sụp = nét đứt. */
-export function drawCrumble(ctx: CanvasRenderingContext2D, r: R, th: Theme, remain: number, broken: boolean, t: number): void {
+export function drawCrumble(ctx: CanvasRenderingContext2D, r: R, th: Theme, remain: number, broken: boolean, t: number, look: "brown" | "theme" = "brown"): void {
   if (broken) return dashedRect(ctx, r, "#A1887F", 0.6);
   const shaking = remain >= 0 && remain <= PHYS.crumbleShake;
   ctx.save();
   if (shaking) ctx.translate(Math.sin(t * 80) * 2, 0);
-  if (th.era === 2) {
+  if (look === "theme" && th.era === 2) {
     for (let x = r.x; x < r.x + r.w; x += 16) {
       box(ctx, x + 1, r.y + 1, 14, r.h - 2, "#F3E2A9", 1, "#8D6E63"); // tem phiếu
       ctx.fillStyle = "#B5382A";
@@ -170,7 +170,7 @@ export function drawCrumble(ctx: CanvasRenderingContext2D, r: R, th: Theme, rema
       for (let y = r.y + 2; y < r.y + r.h; y += 4) ctx.fillRect(x, y, 1, 2); // răng cưa
     }
   } else {
-    box(ctx, r.x, r.y, r.w, r.h, th.era >= 3 ? "#CFD8DC" : "#A1887F", 2);
+    box(ctx, r.x, r.y, r.w, r.h, look === "theme" && th.era >= 3 ? "#CFD8DC" : "#A1887F", 2);
   }
   if (remain >= 0) {
     ctx.font = `bold ${r.w >= 2 * TILE ? 14 : 11}px monospace`;

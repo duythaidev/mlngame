@@ -245,7 +245,7 @@ function drawObjects(ctx: CanvasRenderingContext2D, level: Level, th: Theme, s: 
         }
         const ci = level.crumbleOf?.[o.id] ?? -1;
         const remain = ci >= 0 && v?.crumbles?.[ci] !== undefined ? v.crumbles[ci] : -1;
-        drawCrumble(ctx, r, th, remain, broken, t);
+        drawCrumble(ctx, r, th, remain, broken, t, sp.look ?? "brown");
         break;
       }
       case "slow":

@@ -278,7 +278,7 @@ export class GameEngine {
       if (this.level.crumbleOf[o.def.id] >= 0) {
         let rem = -1;
         if (o.phase === 0) {
-          rem = o.timer > 0 ? PHYS.crumbleStand - o.timer + PHYS.crumbleShake : -1;
+          rem = o.timer > 0 ? this.crumbleTimes(o).stand - o.timer + PHYS.crumbleShake : -1;
         } else if (o.phase === 1) {
           rem = Math.max(0, PHYS.crumbleShake - o.timer);
         } else {
@@ -697,13 +697,20 @@ export class GameEngine {
     return [main, { x: o.pos.x + ex, y: o.pos.y + ey, w: ew, h: eh }];
   }
 
+  /** Thời gian của một sàn sụp: khai báo trong level (stand / back) hoặc mặc định trong PHYS. */
+  private crumbleTimes(o: Obj): { stand: number; back: number } {
+    const s = o.def.spec;
+    return s.t === "crumble" ? { stand: s.stand ?? PHYS.crumbleStand, back: s.back ?? PHYS.crumbleBack } : { stand: PHYS.crumbleStand, back: PHYS.crumbleBack };
+  }
+
   /** Sàn sụp: đứng liên tục crumbleStand giây → rung crumbleShake giây → biến mất crumbleBack giây → hiện lại. */
   private tickCrumble(o: Obj): void {
     const b = o.body!;
+    const { stand, back } = this.crumbleTimes(o);
     if (o.phase === 0) {
       const stood = this.actors.some((a) => a.supports.has(b));
       o.timer = stood ? o.timer + PHYS.step : 0;
-      if (o.timer >= PHYS.crumbleStand) {
+      if (o.timer >= stand) {
         o.phase = 1;
         o.timer = 0;
       }
@@ -717,7 +724,7 @@ export class GameEngine {
     } else {
       o.timer += PHYS.step;
       const blocked = this.actors.some((a) => overlap(this.actorBox(a, 0.4), o.def.rect));
-      if (o.timer >= PHYS.crumbleBack && !blocked) {
+      if (o.timer >= back && !blocked) {
         o.phase = 0;
         o.timer = 0;
         b.setActive(true);

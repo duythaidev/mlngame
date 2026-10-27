@@ -118,7 +118,7 @@ export default function Sandbox() {
         <div className="arcade-bezel-header">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <img src={badgeStar} alt="Star" style={{ width: 16, height: 16 }} />
-            <span>MÁY MÔ PHỎNG VẬT LÝ DÂY THỪNG · {n} NGƯỜI CHƠI LOCAL (?n=2..5)</span>
+            <span>MÁY MÔ PHỎNG VẬT LÝ DÂY THỪNG · {n} NGƯỜI CHƠI LOCAL</span>
           </div>
           <div className="arcade-bezel-lights">
             <span className="red" />

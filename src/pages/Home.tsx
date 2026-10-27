@@ -67,9 +67,6 @@ export default function Home() {
                 Trò chơi đồng đội vượt thử thách · Sức mạnh của sự gắn kết
               </div>
             </div>
-            <div className="tag host">
-              ★ PHIÊN BẢN 2026
-            </div>
           </div>
         </div>
 
