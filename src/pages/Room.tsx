@@ -1,7 +1,6 @@
 // src/pages/Room.tsx
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ref, set } from "firebase/database";
 import CharacterPicker, { CharacterPreview } from "../components/CharacterPicker";
 import GameCanvas from "../components/GameCanvas";
 import GameStage from "../components/GameStage";
@@ -9,15 +8,11 @@ import { roleOf, type RoleId } from "../game/characters";
 import { START, type Progress } from "../game/progress";
 import TouchControls from "../components/TouchControls";
 import badgeStar from "../assets/badge-star.svg";
-import { db } from "../lib/firebase";
 import { SLOT_COLORS } from "../lib/constants";
 import { useDbValue, useUser } from "../lib/hooks";
 import { loadProfile, saveProfile } from "../lib/profile";
 import { joinRoom } from "../lib/rooms";
 import type { Profile, RoomMeta, SlotInfo } from "../lib/types";
-
-// Level được thiết kế cho nhóm 2–5 người. Thử một mình: tạo .env.local với VITE_MIN_PLAYERS=1
-const MIN_PLAYERS = Number(import.meta.env.VITE_MIN_PLAYERS ?? 2);
 
 export default function Room() {
   const { id = "" } = useParams();
@@ -88,14 +83,8 @@ export default function Room() {
     });
   }
 
-  const setPhase = async (phase: "lobby" | "playing") => {
-    await set(ref(db, `roomList/${id}/phase`), phase).catch(console.error);
-  };
-
   const slots = slotsQ.value ?? {};
   const keys = Object.keys(slots).sort();
-  const isCoordinator = mySlot !== null && keys[0] === mySlot;
-  const isHost = isCoordinator;
 
   if (error) {
     return (
@@ -205,12 +194,6 @@ export default function Room() {
             {copied ? "✓ Đã Chép Link!" : "🔗 Sao Chép Link Mời"}
           </button>
         </div>
-
-        {isHost && (
-          <span className="tag host" style={{ fontSize: 13 }}>
-            ★ Bạn là Chủ Phòng (Host)
-          </span>
-        )}
       </div>
 
       {/* Lobby Phase */}
@@ -221,14 +204,13 @@ export default function Room() {
               ★ Danh Sách Người Chơi Trong Phòng
             </h3>
             <span className="muted" style={{ fontSize: 13 }}>
-              Cần ít nhất 1 người chơi để bắt đầu
+              Ban tổ chức sẽ bắt đầu lượt thi cho mọi phòng
             </span>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
             {Array.from({ length: m.max }, (_, i) => `s${i}`).map((s, idx) => {
               const p = slots[s];
-              const isSlotHost = p && s === keys[0];
               const isMe = p && s === mySlot;
               const slotColor = SLOT_COLORS[idx % SLOT_COLORS.length];
 
@@ -253,7 +235,6 @@ export default function Room() {
                       {p ? p.name : <span className="muted" style={{ fontStyle: "italic" }}>(Đang đợi...)</span>}
                     </span>
                     <div style={{ display: "flex", gap: 4 }}>
-                      {isSlotHost && <span className="tag host" style={{ fontSize: 10, padding: "1px 6px" }}>Chủ phòng</span>}
                       {isMe && <span className="tag" style={{ fontSize: 10, padding: "1px 6px" }}>Bạn</span>}
                     </div>
                   </div>
@@ -263,24 +244,12 @@ export default function Room() {
           </div>
 
           <div style={{ marginTop: 24, textAlign: "center" }}>
-            {isHost ? (
-              <button
-                className="btn gold"
-                style={{ fontSize: 18, padding: "12px 28px" }}
-                disabled={keys.length < MIN_PLAYERS}
-                title={keys.length < MIN_PLAYERS ? `Cần ít nhất ${MIN_PLAYERS} người` : undefined}
-                onClick={() => setPhase("playing")}
-              >
-                ★ BẮT ĐẦU CHƠI NGAY ★
-              </button>
-            ) : (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 18px", background: "var(--bg-subtle)", borderRadius: 8, border: "2px dashed var(--border)" }}>
-                <span style={{ fontSize: 16 }}>⏳</span>
-                <span className="muted" style={{ fontWeight: 600 }}>
-                  Đang chờ chủ phòng nhấn bắt đầu...
-                </span>
-              </div>
-            )}
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 18px", background: "var(--bg-subtle)", borderRadius: 8, border: "2px dashed var(--border)" }}>
+              <span style={{ fontSize: 16 }}>⏳</span>
+              <span className="muted" style={{ fontWeight: 600 }}>
+                Đang chờ ban tổ chức bắt đầu lượt thi...
+              </span>
+            </div>
           </div>
         </div>
       )}
@@ -305,11 +274,11 @@ export default function Room() {
               <p className="muted">Đang kết nối tín hiệu vào phòng…</p>
             </div>
           ) : (
-            <GameStage progress={progress} footnote={isHost ? "Bấm R để cả phòng chơi lại" : "Chờ chủ phòng bấm R để chơi lại"}>
+            <GameStage progress={progress} footnote="Chờ ban tổ chức mở lượt mới">
               <GameCanvas roomId={id} levelId={m.level} slots={slots} mySlot={mySlot} onProgress={setProgress} />
             </GameStage>
           )}
-          {mySlot !== null && <TouchControls showRestart={isHost} />}
+          {mySlot !== null && <TouchControls />}
 
           <div className="arcade-controls-guide">
             <div>
@@ -321,20 +290,7 @@ export default function Room() {
               <span className="key-pill">W</span> hoặc <span className="key-pill">Space</span>
               <span className="key-pill">↑</span> Bật nhảy
             </div>
-            {isHost && (
-              <div>
-                <span className="key-pill">R</span> Chơi lại khi thắng
-              </div>
-            )}
           </div>
-
-          {isHost && (
-            <div style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
-              <button className="btn ghost sm" onClick={() => setPhase("lobby")}>
-                ⤺ Kết Thúc & Về Sảnh Chờ
-              </button>
-            </div>
-          )}
         </div>
       )}
     </div>

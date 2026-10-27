@@ -291,3 +291,30 @@ describe("5 level dựng được và không ai chết khi đứng yên ở xu�
     }
   }
 });
+
+describe("gai: va chạm theo hình tam giác", () => {
+  const lv = () => level([".S........X" + ".".repeat(W - 11)]);
+  /** Đặt người 0 sao cho hộp va chạm (0,7 ô) có mép phải ở `right` và đáy ở `bottom` (đơn vị ô), chạy 1 khung. */
+  function at(right: number, bottom: number): boolean {
+    const L = lv();
+    const e = new GameEngine(L, slots(1));
+    place(e, 0, right - 0.35, bottom - 0.35);
+    run(e, 1);
+    return e.lose !== null;
+  }
+
+  it("lơ lửng ngay trên vai gai (ngoài tam giác, trong hình chữ nhật cũ) → không thua", () => {
+    const s = lv().spikes[0];
+    expect(at(s.x + 0.3, s.y + 0.65)).toBe(false);
+  });
+
+  it("chạm sườn gai → thua", () => {
+    const s = lv().spikes[0];
+    expect(at(s.x + 0.45, s.y + 0.8)).toBe(true);
+  });
+
+  it("rơi trúng mũi gai → thua", () => {
+    const s = lv().spikes[0];
+    expect(at(s.x + 0.85, s.y + 0.6)).toBe(true);
+  });
+});

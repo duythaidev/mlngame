@@ -22,8 +22,10 @@ describe("sprite", () => {
 it("vai theo avatar đã lưu", () => {
   expect(roleOf("builder")).toBe("builder");
   expect(roleOf("/src/assets/avatar-scholar.svg")).toBe("scholar");
+  expect(roleOf("farmer")).toBe("farmer");
   expect(roleOf(null, "s1")).toBe("volunteer");
-  expect(roleOf("data:image/webp;base64,xx", "s4")).toBe("soldier");
+  expect(roleOf("data:image/webp;base64,xx", "s4")).toBe("farmer");
+  expect(roleOf("data:image/webp;base64,xx", "s5")).toBe("soldier");
 });
 
 describe("tư thế", () => {

@@ -63,6 +63,22 @@ function overlap(a: Aabb, b: Aabb): boolean {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
+// Gai = tam giác đúng như hình vẽ (renderer drawSpikes): đáy ở mép dưới ô, rộng 28/32 ô, mũi ở giữa nửa dưới ô.
+const SPIKE_HALF = 14 / 32;
+const SPIKE_TOP = 0.5;
+
+/** Hộp nhân vật có chạm tam giác gai ở ô (x, y) không. */
+function hitsSpike(box: Aabb, s: { x: number; y: number }): boolean {
+  const cx = s.x + 0.5;
+  const base = s.y + 1;
+  if (box.y >= base || box.y + box.h <= s.y + SPIKE_TOP) return false;
+  const nearest = clamp(cx, box.x, box.x + box.w); // điểm của hộp gần mũi gai nhất theo chiều ngang
+  const off = Math.abs(nearest - cx);
+  if (off >= SPIKE_HALF) return false;
+  const surface = s.y + SPIKE_TOP + (off / SPIKE_HALF) * (1 - SPIKE_TOP); // mặt sườn gai tại điểm đó
+  return box.y + box.h > surface;
+}
+
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
 }
@@ -1084,8 +1100,7 @@ export class GameEngine {
 
       const box: Aabb = { x: p.x - 0.35, y: p.y - 0.35, w: 0.7, h: 0.7 };
       for (const s of level.spikes) {
-        // mũi gai chỉ ở nửa dưới của ô
-        if (overlap(box, { x: s.x + 0.1, y: s.y + 0.5, w: 0.8, h: 0.5 })) culprit ??= a.slot;
+        if (hitsSpike(box, s)) culprit ??= a.slot;
       }
       for (const z of level.hazards) {
         if (overlap(box, z)) culprit ??= a.slot; // vùng chết (trần): chạm là thua

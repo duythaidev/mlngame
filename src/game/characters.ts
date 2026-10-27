@@ -1,11 +1,11 @@
 // src/game/characters.ts
-// 4 nhân vật chibi pixel (Chiến sĩ · Thanh niên · Công nhân · Sinh viên), vẽ bằng code từ lưới ký tự.
+// 5 nhân vật chibi pixel (Chiến sĩ · Thanh niên · Công nhân · Sinh viên · Nông dân), vẽ bằng code từ lưới ký tự.
 // Sprite vẽ hướng PHẢI; quay trái = lật gương. Tư thế: đứng yên / đi (2 khung, chân tay đưa theo hướng đi).
 //
 // Ký tự trong lưới: . trong suốt · K viền · S da · E mắt · H mũ · h vành/bóng mũ · Y huy hiệu trên mũ
 //                   X tóc · G gọng kính · T áo · t áo tối · A điểm nhấn (cổ áo / quai / cà vạt) · P quần · F giày
 
-export type RoleId = "soldier" | "volunteer" | "builder" | "scholar";
+export type RoleId = "soldier" | "volunteer" | "builder" | "scholar" | "farmer";
 export type Pose = "idle" | "walk";
 
 export interface Role {
@@ -18,44 +18,48 @@ export const ROLES: Role[] = [
   { id: "volunteer", name: "Thanh niên" },
   { id: "builder", name: "Công nhân" },
   { id: "scholar", name: "Sinh viên" },
+  { id: "farmer", name: "Nông dân" },
 ];
 
 export const SPRITE_W = 14;
 
-type HeadKind = "helmet" | "hardhat" | "hair";
+type HeadKind = "helmet" | "hardhat" | "hair" | "nonla";
 
 const HEADS: Record<HeadKind, string[]> = {
   helmet: [
     "....KKKKKK....",
     "..KKHHHHHHKK..",
     ".KHHHHHYYHHHK.",
-    ".KHHHHHHHHHHK.",
     "KhhhhhhhhhhhhK",
     ".KSSSSSSSSSSK.",
     ".KSSSSSSESSEK.",
-    ".KSSSSSSSSSSK.",
     "..KKSSSSSSKK..",
   ],
   hardhat: [
-    "...KKKKKKK....",
-    "..KHHHHHHHK...",
-    ".KHHHhHHHHHK..",
-    ".KHHHhHHHHHK..",
-    "KKhhhhhhhhhhhK",
-    ".KXSSSSSSSSSK.",
+    "....KKKKKK....",
+    "..KKHHHHHHKK..",
+    ".KHHHhHHhHHHK.",
+    "KhhhhhhhhhhhhK",
+    ".KXSSSSSSSSXK.",
     ".KSSSSSSESSEK.",
-    ".KSSSSSSSSSSK.",
     "..KKSSSSSSKK..",
   ],
   hair: [
-    "...KKKKKKKK...",
-    "..KXXXXXXXXK..",
+    "....KKKKKK....",
+    "..KKXXXXXXKK..",
     ".KXXXXXXXXXXK.",
-    ".KXXXXXXXXXXK.",
-    ".KXXSSSSSSSXK.",
-    ".KXSSSSSSSSSK.",
-    ".KSSSSSGEGGEK.",
+    ".KXXSSSSSSXXK.",
+    ".KXSSSSSSSSXK.",
+    ".KSSSSSSESSEK.",
+    "..KKSSSSSSKK..",
+  ],
+  nonla: [
+    ".....KKKK.....",
+    "...KHHHHHhK...",
+    ".KHHHHHHHHhhK.",
+    "KhhhhhhhhhhhhK",
     ".KSSSSSSSSSSK.",
+    ".KSSSSSSESSEK.",
     "..KKSSSSSSKK..",
   ],
 };
@@ -63,34 +67,28 @@ const HEADS: Record<HeadKind, string[]> = {
 /** Thân + chân theo tư thế. walk[0] = sải chân (tay trước vươn ra), walk[1] = chân khép, người nhún lên 1 px. */
 const BODY = {
   idle: [
-    "...KTTAATTK...",
     "..KTTTAATTTK..",
     ".KSKTTTTTTKSK.",
     "..KKttttttKK..",
     "...KPPPPPPK...",
     "...KPPKKPPK...",
-    "...KPK..KPK...",
     "..KFFK..KFFK..",
   ],
   walk0: [
-    "...KTTAATTK...",
     "..KTTTAATTTK..",
     "..KTTTTTTTTKSK",
     "..KKttttttKK..",
     "...KPPPPPPK...",
-    "..KPPKKKPPK...",
-    ".KPK....KPPK..",
-    "KFFK.....KFFK.",
+    "..KPPK..KPPK..",
+    ".KFFK....KFFK.",
   ],
   walk1: [
-    "...KTTAATTK...",
     "..KTTTAATTTK..",
-    "..KTTTTTTTKSK.",
+    ".KSKTTTTTTTK..",
     "..KKttttttKK..",
     "...KPPPPPPK...",
     "....KPPPPK....",
-    ".....KPPK.....",
-    "....KFFFFK....",
+    "...KFFFFFFK...",
   ],
 };
 
@@ -120,6 +118,10 @@ const LOOK: Record<RoleId, { head: HeadKind; colors: Record<string, string> }> =
   scholar: {
     head: "hair",
     colors: { X: "#222222", T: "#FFFFFF", t: "#DADADA", A: "#D32F2F", P: "#37474F", F: "#222222" },
+  },
+  farmer: {
+    head: "nonla",
+    colors: { H: "#F5E6C8", h: "#D7BA84", T: "#6D4C41", t: "#54382F", A: "#EFEBE9", P: "#37474F", F: "#4E342E" },
   },
 };
 

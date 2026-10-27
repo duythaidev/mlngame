@@ -61,26 +61,35 @@ export interface DrawState {
   bodies?: [number, number][];
   /** Thời gian (giây) cho hoạt ảnh. */
   time?: number;
+  /** Bộ hiệu ứng riêng của canvas này (createFx); không truyền = bộ mặc định của trang. */
+  fx?: Fx;
 }
 
 const INK = "#222222";
 
-// ------------------------------------------------------------------ hiệu ứng theo thời gian (1 canvas / trang)
+// ------------------------------------------------------------------ hiệu ứng theo thời gian
 // Nhớ trạng thái khung trước để bắn hạt đúng lúc đổi (qua cổng, sàn vỡ, khối "Bãi bỏ" vào đích…).
-const fx = {
-  levelId: "",
-  lastT: 0,
-  cp: 0,
-  passAt: new Map<number, number>(), // cp → thời điểm (giây) qua cổng mốc
-  bits: new Map<number, boolean>(), // object id → bit khung trước
-  counts: new Map<number, number>(), // hòm phiếu / khung chữ → số đã nộp khung trước
-  won: false,
-  particles: new Particles(200),
-  shake: new Shake(),
-  motion: new MotionTracker(), // tư thế đứng / đi của từng người
-};
+// Mỗi canvas một bộ (createFx) — trang admin vẽ nhiều phòng cùng lúc; trang chơi dùng bộ mặc định.
+export function createFx() {
+  return {
+    levelId: "",
+    lastT: 0,
+    cp: 0,
+    passAt: new Map<number, number>(), // cp → thời điểm (giây) qua cổng mốc
+    bits: new Map<number, boolean>(), // object id → bit khung trước
+    counts: new Map<number, number>(), // hòm phiếu / khung chữ → số đã nộp khung trước
+    won: false,
+    particles: new Particles(200),
+    shake: new Shake(),
+    motion: new MotionTracker(), // tư thế đứng / đi của từng người
+  };
+}
 
-function resetFx(levelId: string, t: number): void {
+export type Fx = ReturnType<typeof createFx>;
+
+const defaultFx = createFx();
+
+function resetFx(fx: Fx, levelId: string, t: number): void {
   fx.levelId = levelId;
   fx.cp = 0;
   fx.passAt.clear();
@@ -93,7 +102,7 @@ function resetFx(levelId: string, t: number): void {
 }
 
 /** Bit đổi từ false → true kể từ khung trước? */
-function rose(id: number, now: boolean): boolean {
+function rose(fx: Fx, id: number, now: boolean): boolean {
   const before = fx.bits.get(id) ?? now;
   fx.bits.set(id, now);
   return now && !before;
@@ -113,21 +122,27 @@ function feetOf(p: DrawPlayer): number {
   return Math.round((p.y + PLAYER_SIZE / 2) * TILE);
 }
 
-/** Nhân vật pixel theo vai + tư thế; vòng màu chỗ ngồi dưới chân và tên trên đầu để phân biệt người chơi. */
-function drawPlayer(ctx: CanvasRenderingContext2D, p: DrawPlayer, m: Motion): void {
+/** Nhân vật pixel theo vai + tư thế; vòng màu chỗ ngồi dưới chân để phân biệt người chơi. */
+function drawPlayer(ctx: CanvasRenderingContext2D, p: DrawPlayer, m: Motion, onOther = false): void {
   const cx = p.x * TILE;
   const feet = feetOf(p);
   const color = slotColor(p.slot);
 
-  ctx.fillStyle = "rgba(0,0,0,0.2)"; // bóng đổ
-  ctx.beginPath();
-  ctx.ellipse(cx, feet + 1, 11, 3, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = color; // vòng màu chỗ ngồi
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.ellipse(cx, feet + 1, 12, 3.5, 0, 0, Math.PI * 2);
-  ctx.stroke();
+  if (!onOther) {
+    ctx.fillStyle = "rgba(0,0,0,0.18)"; // bóng đổ khi đứng trên sàn
+    ctx.beginPath();
+    ctx.ellipse(cx, feet + 1, 10, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = color; // vòng màu chỗ ngồi
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.ellipse(cx, feet + 1, 11, 3, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  } else {
+    // Đang đứng trên đầu đồng đội: vệt màu gọn gàng dưới đế giày, không vẽ vòng tròn đè lên mặt bạn
+    ctx.fillStyle = color;
+    ctx.fillRect(cx - 8, feet - 1, 16, 2);
+  }
 
   drawCharacter(ctx, roleOf(p.avatar, p.slot), m.pose, m.frame, m.face, cx, feet, SPRITE_PX);
 }
@@ -151,12 +166,12 @@ function drawLostPlayer(ctx: CanvasRenderingContext2D, p: DrawPlayer, m: Motion,
   ctx.lineWidth = 2;
   for (const col of [8.5, 11.5]) {
     const ex = p.x * TILE + (col - SPRITE_W / 2) * SPRITE_PX * m.face; // vị trí mắt trong sprite (lật theo hướng)
-    const ey = y0 + 6.5 * SPRITE_PX;
+    const ey = y0 + 5.5 * SPRITE_PX;
     ctx.beginPath();
-    ctx.moveTo(ex - 3, ey - 3);
-    ctx.lineTo(ex + 3, ey + 3);
-    ctx.moveTo(ex + 3, ey - 3);
-    ctx.lineTo(ex - 3, ey + 3);
+    ctx.moveTo(ex - 2, ey - 2);
+    ctx.lineTo(ex + 2, ey + 2);
+    ctx.moveTo(ex + 2, ey - 2);
+    ctx.lineTo(ex - 2, ey + 2);
     ctx.stroke();
   }
   ctx.restore();
@@ -191,7 +206,7 @@ function drawRope(ctx: CanvasRenderingContext2D, a: DrawPlayer, b: DrawPlayer, t
 type CarrySpec = Extract<ObjDef["spec"], { t: "carry" }>;
 
 /** Vẽ vật thể (trước dây và người). Trả về các vật đang được mang để vẽ sau người chơi. */
-function drawObjects(ctx: CanvasRenderingContext2D, level: Level, th: Theme, s: DrawState, n: number, now: number): ObjDef[] {
+function drawObjects(ctx: CanvasRenderingContext2D, level: Level, th: Theme, s: DrawState, n: number, now: number, fx: Fx): ObjDef[] {
   const v = s.view ?? null;
   const t = s.time ?? 0;
   const bodyAt = (o: ObjDef): Rect => {
@@ -209,7 +224,7 @@ function drawObjects(ctx: CanvasRenderingContext2D, level: Level, th: Theme, s: 
     const on = "sig" in sp && sp.sig ? sigBit(level, v, sp.sig) : false;
     switch (sp.t) {
       case "gate":
-        if (rose(o.id, on)) fx.particles.emit("dust", r.x + r.w / 2, r.y + r.h - 8, 10);
+        if (rose(fx, o.id, on)) fx.particles.emit("dust", r.x + r.w / 2, r.y + r.h - 8, 10);
         drawGate(ctx, r, th, on);
         if (sp.label && !on) drawLabel(ctx, labelText(sp.label), r.x + r.w / 2, r.y + r.h - 40);
         break;
@@ -224,7 +239,7 @@ function drawObjects(ctx: CanvasRenderingContext2D, level: Level, th: Theme, s: 
         break;
       case "crumble": {
         const broken = objBit(level, v, o);
-        if (rose(o.id, broken)) {
+        if (rose(fx, o.id, broken)) {
           fx.particles.emit("dust", r.x + r.w / 2, r.y + 8, 12);
           fx.shake.kick(now);
         }
@@ -234,7 +249,7 @@ function drawObjects(ctx: CanvasRenderingContext2D, level: Level, th: Theme, s: 
         break;
       }
       case "slow":
-        if (rose(o.id, on)) fx.particles.emit("bird", r.x + r.w / 2, r.y + r.h / 2, 14); // giấy tờ hóa chim giấy bay đi
+        if (rose(fx, o.id, on)) fx.particles.emit("bird", r.x + r.w / 2, r.y + r.h / 2, 14); // giấy tờ hóa chim giấy bay đi
         if (!on) drawSlowZone(ctx, r, t, sp.label ? labelText(sp.label) : undefined);
         break;
       case "goal":
@@ -272,7 +287,7 @@ function drawObjects(ctx: CanvasRenderingContext2D, level: Level, th: Theme, s: 
       }
       case "box": {
         const inGoal = objBit(level, v, o);
-        if (rose(o.id, inGoal)) {
+        if (rose(fx, o.id, inGoal)) {
           const b = px(bodyAt(o));
           fx.particles.emit(sp.label === "baibo" ? "bird" : "dust", b.x + b.w / 2, b.y + b.h / 2, 16); // "Bãi bỏ": hồ sơ hóa chim giấy
           fx.shake.kick(now);
@@ -361,7 +376,8 @@ export function drawFrame(ctx: CanvasRenderingContext2D, level: Level, s: DrawSt
   const cp = v?.cp ?? 0;
   const players = [...s.players].sort((a, b) => (a.slot < b.slot ? -1 : 1));
 
-  if (fx.levelId !== level.id) resetFx(level.id, t);
+  const fx = s.fx ?? defaultFx;
+  if (fx.levelId !== level.id) resetFx(fx, level.id, t);
   const dt = Math.min(0.1, Math.max(0, t - fx.lastT));
   fx.lastT = t;
 
@@ -419,15 +435,16 @@ export function drawFrame(ctx: CanvasRenderingContext2D, level: Level, s: DrawSt
     ctx.stroke();
   }
 
-  const carried = drawObjects(ctx, level, th, s, players.length, now);
+  const carried = drawObjects(ctx, level, th, s, players.length, now, fx);
 
   for (let i = 0; i < players.length - 1; i++) drawRope(ctx, players[i], players[i + 1], t);
   const flagged = leaders(level, v, players);
   for (const p of players) {
     const m = fx.motion.update(p.slot, p.x, dt);
-    if (flagged.includes(p)) drawLeaderFlag(ctx, p.x * TILE, feetOf(p) - SPRITE_H * SPRITE_PX + 6, t);
+    const onOther = players.some((q) => q !== p && Math.abs(q.x - p.x) < 0.6 && q.y > p.y && q.y - p.y < 1.1);
+    if (flagged.includes(p)) drawLeaderFlag(ctx, p.x * TILE, feetOf(p) - SPRITE_H * SPRITE_PX + 4, t);
     if (s.lose && p.slot === s.lose.slot) drawLostPlayer(ctx, p, m, s.lose.t);
-    else drawPlayer(ctx, p, m);
+    else drawPlayer(ctx, p, m, onOther);
   }
 
   // vật đang mang: lơ lửng 0,7 ô trên đầu, lắc ±8°
@@ -437,7 +454,7 @@ export function drawFrame(ctx: CanvasRenderingContext2D, level: Level, s: DrawSt
     if (!p) continue;
     const sp = o.spec as CarrySpec;
     ctx.save();
-    ctx.translate(p.x * TILE, feetOf(p) - SPRITE_H * SPRITE_PX - 30 + Math.sin(t * 4) * 2); // trên tên người mang
+    ctx.translate(p.x * TILE, feetOf(p) - SPRITE_H * SPRITE_PX - 14 + Math.sin(t * 4) * 2);
     ctx.rotate(Math.sin(t * 3) * 0.14);
     drawCarryItem(ctx, sp.kind, 0, 0, labelText(sp.text ?? ""), constitutionYear(level.id), t, false);
     ctx.restore();

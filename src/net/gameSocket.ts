@@ -17,7 +17,6 @@ export interface ConnectOptions {
 
 export interface GameConnection {
   sendInput(i: InputState): void;
-  restart(): void;
   /** Độ trễ vòng đi-về tới server (ms). Reject nếu quá 2 giây. */
   ping(): Promise<number>;
   close(): void;
@@ -66,9 +65,6 @@ export function connectGame(opts: ConnectOptions): GameConnection {
   return {
     sendInput(i) {
       socket.emit("in", { ...i, q: ++seq });
-    },
-    restart() {
-      socket.emit("restart");
     },
     ping() {
       return new Promise<number>((resolve, reject) => {

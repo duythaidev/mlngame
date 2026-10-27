@@ -55,3 +55,9 @@ export async function joinRoom(
   }
   throw new Error("Phòng đã đầy");
 }
+
+/** Admin đổi trạng thái nhiều phòng cùng lúc (playing = người chơi vào màn chơi, lobby = về sảnh chờ). */
+export async function setRoomsPhase(ids: string[], phase: "lobby" | "playing"): Promise<void> {
+  if (ids.length === 0) return;
+  await update(ref(db), Object.fromEntries(ids.map((id) => [`roomList/${id}/phase`, phase])));
+}

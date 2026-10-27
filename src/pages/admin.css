@@ -1,0 +1,114 @@
+/* src/pages/admin.css — bàn quản trị: xếp hạng, lưới phòng, xem to */
+.page.page-admin {
+  max-width: 1280px;
+}
+.admin-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.admin-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.admin-rank table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.admin-rank th,
+.admin-rank td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border, #ddd);
+  vertical-align: top;
+}
+.admin-rank-no {
+  font-family: Oswald, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+}
+.admin-rank tr.top1 { background: #fff4c2; }
+.admin-rank tr.top2 { background: #f1f3f5; }
+.admin-rank tr.top3 { background: #fbe6d4; }
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
+}
+.admin-room {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+.admin-room-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.admin-thumb-btn {
+  padding: 0;
+  border: 2px solid var(--border, #222);
+  border-radius: 6px;
+  background: #fff;
+  cursor: zoom-in;
+  overflow: hidden;
+}
+.admin-thumb {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: none;
+  border-radius: 0;
+}
+.admin-room-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  font-weight: 600;
+}
+.admin-room-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.admin-room-btns select {
+  font-size: 12px;
+  padding: 4px 6px;
+}
+
+.admin-focus {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(20, 14, 10, 0.72);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.admin-focus-box {
+  width: min(960px, 100%);
+  background: var(--paper, #fbf5e6);
+  border: 3px solid #231811;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.admin-focus-canvas {
+  width: 100%;
+  height: auto;
+}

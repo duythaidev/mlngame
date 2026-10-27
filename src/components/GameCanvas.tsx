@@ -97,10 +97,6 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, onProgress 
     });
 
     const offInput = attachInput((i) => conn.sendInput(i));
-    const onKey = (e: KeyboardEvent) => {
-      if (e.code === "KeyR") conn.restart(); // server tự kiểm tra: chỉ ô nhỏ nhất, chỉ khi đã thắng
-    };
-    window.addEventListener("keydown", onKey);
 
     const pinger = showNet
       ? window.setInterval(() => {
@@ -187,7 +183,6 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, onProgress 
     return () => {
       cancelAnimationFrame(raf);
       offInput();
-      window.removeEventListener("keydown", onKey);
       if (pinger !== null) clearInterval(pinger);
       conn.close();
     };
