@@ -85,7 +85,7 @@ export const StoryPolaroidCard: React.FC<StoryPolaroidCardProps> = ({
           {stepObj.source && (
             <div className="archive-source">
               <span>📜</span>
-              <span>{stepObj.source}</span>
+              <span>Nguồn: {stepObj.source}</span>
             </div>
           )}
 

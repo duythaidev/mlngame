@@ -28,7 +28,7 @@ export type ObjSpec =
   | { t: "box"; weight: Need; sig?: string; label?: string } // khối số: đủ `weight` người đẩy mới đi; có trọng lực
   | { t: "goal"; sig: string; label?: string } // ô đích của khối (không đặc)
   | { t: "conveyor"; speed: number } // băng chuyền (đặc): + sang phải, − sang trái (ô/s)
-  | { t: "crumble"; stand?: number; back?: number; look?: "brown" | "theme" } // sàn sụp: stand = giây đứng trước khi rung (mặc định PHYS.crumbleStand), back = giây biến mất rồi hiện lại (mặc định PHYS.crumbleBack = 3), look = "brown" (gạch nâu, mặc định, mọi map) | "theme" (kiểu theo thời kỳ)
+  | { t: "crumble"; stand?: number; time?: number; back?: number; look?: "brown" | "theme" } // sàn sụp: stand/time = giây đứng trước khi sụp (mặc định 3s: 2.7s đứng + 0.3s rung), back = giây biến mất rồi hiện lại (mặc định PHYS.crumbleBack = 3), look = "brown" (gạch nâu, mặc định, mọi map) | "theme" (kiểu theo thời kỳ)
   | { t: "hazard"; path: [number, number][]; speed: number; pause?: number; extra?: [number, number, number, number] } // khối đỏ di chuyển
   | { t: "seesaw" } // bập bênh: tấm 1 hàng, trục ở giữa
   | { t: "carry"; kind: "ballot" | "key" | "word"; to: string; text?: string; perPlayer?: boolean } // vật mang trên đầu

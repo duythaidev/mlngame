@@ -103,7 +103,7 @@ describe("băng chuyền, sàn sụp, khối đỏ", () => {
     expect(pos(e, 0).x).toBeGreaterThan(12.5);
   });
 
-  it("sàn sụp: đứng 0,8 giây → rung → mất; 3 giây sau hiện lại (chỉ đếm ngược khi kích hoạt)", () => {
+  it("sàn sụp: đứng 2,7 giây → rung 0,3 giây → mất (tổng 3 giây); 3 giây sau hiện lại (chỉ đếm ngược khi kích hoạt)", () => {
     const L = level([".S............................"], { c: { t: "crumble" } }, {}, ["#####cc#######################", solid, solid, solid]);
     const e = new GameEngine(L, slots(1));
     const snap0 = decodeObjView(e.snapshot().o ?? "");
@@ -113,10 +113,10 @@ describe("băng chuyền, sàn sụp, khối đỏ", () => {
     run(e, 40);
     expect(rt(e).objs[0].body!.isActive()).toBe(true);
     const snapMid = decodeObjView(e.snapshot().o ?? "");
-    expect(snapMid?.crumbles?.[0]).toBeLessThan(1.0);
+    expect(snapMid?.crumbles?.[0]).toBeLessThan(3.0);
     expect(snapMid?.crumbles?.[0]).toBeGreaterThan(0.3); // đang kích hoạt đếm ngược
 
-    run(e, 30); // 0,8 + 0,3 giây
+    run(e, 150); // 2,7 + 0,3 giây (tổng 190 ticks > 180 ticks = 3 giây)
     expect(rt(e).objs[0].body!.isActive()).toBe(false);
     const snapDone = decodeObjView(e.snapshot().o ?? "");
     expect(snapDone?.crumbles?.[0]).toBe(-1); // đã sập → không hiện
@@ -339,10 +339,10 @@ describe("sàn sụp: thời gian tùy chỉnh", () => {
     return { gone, back };
   }
 
-  it("mặc định: sụp sau ~1,1 giây (0,8 đứng + 0,3 rung), hiện lại sau 3 giây", () => {
+  it("mặc định: sụp sau ~3 giây (2,7 đứng + 0,3 rung), hiện lại sau 3 giây", () => {
     const t = times({ t: "crumble" });
-    expect(t.gone).toBeGreaterThan(1.0);
-    expect(t.gone).toBeLessThan(1.4);
+    expect(t.gone).toBeGreaterThan(2.9);
+    expect(t.gone).toBeLessThan(3.2);
     expect(t.back).toBeGreaterThan(2.9);
     expect(t.back).toBeLessThan(3.2);
   });
@@ -353,5 +353,11 @@ describe("sàn sụp: thời gian tùy chỉnh", () => {
     expect(t.gone).toBeLessThan(2.6);
     expect(t.back).toBeGreaterThan(4.9);
     expect(t.back).toBeLessThan(5.2);
+  });
+
+  it("time = 1.5 → sụp sau đúng ~1,5 giây (1,2 đứng + 0,3 rung)", () => {
+    const t = times({ t: "crumble", time: 1.5 });
+    expect(t.gone).toBeGreaterThan(1.4);
+    expect(t.gone).toBeLessThan(1.7);
   });
 });

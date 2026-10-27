@@ -13,7 +13,6 @@ import { drawFrame, drawMessage, type DrawPlayer } from "../game/renderer";
 import { playSound, preloadSounds } from "../lib/sound";
 import { connectGame, type GameStatus } from "../net/gameSocket";
 import { SnapshotBuffer } from "../net/interpolate";
-import { NetStats } from "../net/netStats";
 
 interface Props {
   roomId: string;
@@ -60,8 +59,6 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, onProgress 
     }
 
     const buffer = new SnapshotBuffer(INTERP_DELAY_MS);
-    const stats = new NetStats();
-    const showNet = new URLSearchParams(window.location.search).has("net");
     let snap: Snapshot | null = null;
     let status: GameStatus = "connecting";
     let detail = "";
@@ -86,7 +83,6 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, onProgress 
         ? { slot: mySlot, name: slotsRef.current[mySlot]?.name ?? mySlot, levelId }
         : undefined,
       onSnap: (s) => {
-        stats.countRecv();
         snap = s;
         buffer.push(s, performance.now());
       },
@@ -98,14 +94,14 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, onProgress 
 
     const offInput = attachInput((i) => conn.sendInput(i));
 
-    const pinger = showNet
-      ? window.setInterval(() => {
-          conn.ping().then(
-            (ms) => (pingMs = ms),
-            () => (pingMs = -1),
-          );
-        }, 2000)
-      : null;
+    const runPing = () => {
+      conn.ping().then(
+        (ms) => (pingMs = Math.round(ms)),
+        () => (pingMs = -1),
+      );
+    };
+    runPing();
+    const pinger = window.setInterval(runPing, 2000);
 
     let raf = 0;
     const frame = (now: number) => {
@@ -164,16 +160,31 @@ export default function GameCanvas({ roomId, levelId, slots, mySlot, onProgress 
           ctx.font = "bold 12px sans-serif";
           ctx.textAlign = "center";
           ctx.fillText(statusText(status, detail), W / 2, 16);
-        }
-
-        if (showNet) {
-          const sm = stats.summary(now);
-          ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-          ctx.fillRect(8, H - 28, 330, 22);
-          ctx.fillStyle = "#FFEB3B";
-          ctx.font = "bold 12px monospace";
+        } else {
+          // Huy hiệu ping gọn ở góc dưới trái (chỉ hiện ms)
+          const pingText = pingMs > 0 ? `${pingMs}ms` : pingMs < 0 ? "-- ms" : "… ms";
+          const dotColor = pingMs <= 0 ? "#888" : pingMs < 60 ? "#4ade80" : pingMs < 120 ? "#facc15" : "#f87171";
+          ctx.save();
+          ctx.font = "bold 11px monospace";
+          const tw = ctx.measureText(pingText).width;
+          const bw = tw + 20;
+          ctx.fillStyle = "rgba(20, 14, 10, 0.65)";
+          if (ctx.roundRect) {
+            ctx.beginPath();
+            ctx.roundRect(8, H - 24, bw, 17, 4);
+            ctx.fill();
+          } else {
+            ctx.fillRect(8, H - 24, bw, 17);
+          }
+          ctx.fillStyle = dotColor;
+          ctx.beginPath();
+          ctx.arc(15, H - 15.5, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
           ctx.textAlign = "left";
-          ctx.fillText(`ping ${pingMs < 0 ? "?" : Math.round(pingMs)}ms · nhận ${sm.recvPerSec}/s · ${status}`, 14, H - 13);
+          ctx.textBaseline = "middle";
+          ctx.fillText(pingText, 22, H - 15.5);
+          ctx.restore();
         }
       }
       raf = requestAnimationFrame(frame);

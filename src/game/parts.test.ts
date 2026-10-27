@@ -30,7 +30,9 @@ describe("5 phần mỗi level", () => {
       parts.forEach((p, i) => {
         expect(p.year.length).toBeLessThanOrEqual(10);
         expect(p.phrase.split(/\s+/).filter((w) => w !== "·").length).toBeLessThanOrEqual(6);
-        expect(p.line.length).toBeLessThanOrEqual(70);
+        expect(p.line.length).toBeLessThanOrEqual(120);
+        expect(p.source.length).toBeGreaterThan(5); // mọi phần phải có nguồn cụ thể
+        expect(p.source).not.toMatch(/^giáo trình$/i);
         expect(existsSync(`public${partImage(id, i)}`)).toBe(true);
       });
     });

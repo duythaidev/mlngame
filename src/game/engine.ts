@@ -697,10 +697,17 @@ export class GameEngine {
     return [main, { x: o.pos.x + ex, y: o.pos.y + ey, w: ew, h: eh }];
   }
 
-  /** Thời gian của một sàn sụp: khai báo trong level (stand / back) hoặc mặc định trong PHYS. */
+  /** Thời gian của một sàn sụp: khai báo trong level (time / stand / back) hoặc mặc định trong PHYS. */
   private crumbleTimes(o: Obj): { stand: number; back: number } {
     const s = o.def.spec;
-    return s.t === "crumble" ? { stand: s.stand ?? PHYS.crumbleStand, back: s.back ?? PHYS.crumbleBack } : { stand: PHYS.crumbleStand, back: PHYS.crumbleBack };
+    if (s.t !== "crumble") return { stand: PHYS.crumbleStand, back: PHYS.crumbleBack };
+    let stand: number = PHYS.crumbleStand;
+    if (s.time !== undefined) {
+      stand = Math.max(0.1, s.time - PHYS.crumbleShake);
+    } else if (s.stand !== undefined) {
+      stand = s.stand;
+    }
+    return { stand, back: s.back ?? PHYS.crumbleBack };
   }
 
   /** Sàn sụp: đứng liên tục crumbleStand giây → rung crumbleShake giây → biến mất crumbleBack giây → hiện lại. */

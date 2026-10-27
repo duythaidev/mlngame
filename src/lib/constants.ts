@@ -37,7 +37,7 @@ export const PHYS = {
   boxGravity: 30, // khối số rơi: gia tốc (ô/s²)
   boxMaxFall: 12, // khối số rơi: tốc độ tối đa (ô/s)
   boxRespawn: 2, // khối rơi sâu quá 2,5 ô: sau chừng này giây về chỗ cũ
-  crumbleStand: 0.8, // sàn sụp: đứng liên tục chừng này giây thì bắt đầu rung
+  crumbleStand: 2.7, // sàn sụp: đứng liên tục chừng này giây thì bắt đầu rung (tổng 2.7 + 0.3 = 3s)
   crumbleShake: 0.3, // sàn sụp: rung chừng này giây rồi biến mất
   crumbleBack: 3, // sàn sụp: biến mất chừng này giây rồi hiện lại
   seesawThick: 0.4, // bập bênh: độ dày tấm (ô)
