@@ -1,31 +1,29 @@
 {
   "rules": {
     ".read": "auth != null",
+    "admins": {
+      ".write": false
+    },
     "roomList": {
       "$roomId": {
-        ".write": "auth != null"
+        ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+        "players": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.isString() && newData.val().length <= 20"
+          }
+        }
       }
     },
     "rooms": {
       "$roomId": {
+        ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
         ".read": "auth != null",
-        "allowed": {
-          ".write": "auth != null"
-        },
         "slots": {
           "$slot": {
-            ".write": "auth != null && (!data.exists() || data.child('uid').val() === auth.uid)"
+            ".write": "auth != null && root.child('rooms').child($roomId).child('allowed').child($slot).val() === true && (!data.exists() || data.child('uid').val() === auth.uid)",
+            ".validate": "!newData.exists() || (newData.child('uid').val() === auth.uid && newData.child('name').isString() && newData.child('name').val().length <= 20)"
           }
-        },
-        "pos": {
-          "$slot": {
-            ".write": "auth != null && root.child('rooms').child($roomId).child('slots').child($slot).child('uid').val() === auth.uid",
-            ".validate": "newData.isString() && newData.val().length < 120"
-          }
-        },
-        "game": {
-          ".write": "auth != null && root.child('rooms').child($roomId).child('slots').exists()",
-          ".validate": "newData.hasChildren(['lv', 'epoch', 'status', 'key', 'at', 'levelStart'])"
         }
       }
     }

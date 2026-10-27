@@ -20,4 +20,5 @@ export interface Snapshot {
   a?: Record<string, number>; // seq input cuối cùng host đã áp dụng cho từng slot
   v?: Record<string, [number, number]>; // vận tốc slot [vx*100, vy*100]
   h?: 0 | 1; // host đang ẩn tab
+  o?: string; // trạng thái vật thể (nút, cổng, thang, sàn chở, khối, mảnh, cột mốc) — xem game/objects.ts
 }

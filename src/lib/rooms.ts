@@ -38,24 +38,26 @@ export async function joinRoom(
     }
 
     const playerRef = ref(db, `roomList/${roomId}/players/${uid}`);
-    const posRef = ref(db, `rooms/${roomId}/pos/${slot}`);
     const dropSlot = onDisconnect(slotRef);
     const dropPlayer = onDisconnect(playerRef);
-    const dropPos = onDisconnect(posRef);
 
     await dropSlot.remove();
     await dropPlayer.remove();
-    await dropPos.remove();
     await set(playerRef, data.name);
-    await remove(posRef); // xóa vị trí cũ còn sót
 
     return {
       slot,
       leave: async () => {
-        await Promise.all([dropSlot.cancel(), dropPlayer.cancel(), dropPos.cancel()]);
-        await Promise.all([remove(posRef), remove(playerRef), remove(slotRef)]);
+        await Promise.all([dropSlot.cancel(), dropPlayer.cancel()]);
+        await Promise.all([remove(playerRef), remove(slotRef)]);
       },
     };
   }
   throw new Error("Phòng đã đầy");
+}
+
+/** Admin đổi trạng thái nhiều phòng cùng lúc (playing = người chơi vào màn chơi, lobby = về sảnh chờ). */
+export async function setRoomsPhase(ids: string[], phase: "lobby" | "playing"): Promise<void> {
+  if (ids.length === 0) return;
+  await update(ref(db), Object.fromEntries(ids.map((id) => [`roomList/${id}/phase`, phase])));
 }

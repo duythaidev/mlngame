@@ -513,3 +513,8 @@ canvas {
 }
 .touch-btn.wide { width: 120px; font-size: 18px; background: #d32f2f; color: #fff; }
 .touch-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #212121; }
+/* ---------- Khung canvas (màn kết nằm trong GameStage) ---------- */
+.canvas-wrap {
+  position: relative;
+}
+

@@ -1,6 +1,6 @@
 // src/components/TouchControls.tsx
-// Nút cảm ứng cho điện thoại. Bấm/thả nút = phát sự kiện bàn phím giả (ArrowLeft/Right/Up, KeyR)
-// nên mọi chỗ đang nghe bàn phím (attachInput, phím R của host) hoạt động y hệt, không cần sửa logic game.
+// Nút cảm ứng cho điện thoại. Bấm/thả nút = phát sự kiện bàn phím giả (ArrowLeft/Right/Up)
+// nên mọi chỗ đang nghe bàn phím (attachInput) hoạt động y hệt, không cần sửa logic game.
 import { useEffect, useState, type PointerEvent } from "react";
 
 function sendKey(type: "keydown" | "keyup", code: string): void {
@@ -32,7 +32,7 @@ function HoldButton({ code, label, wide }: { code: string; label: string; wide?:
 }
 
 /** Chỉ hiện trên thiết bị cảm ứng (hoặc khi URL có ?touch=1 để thử trên máy tính). */
-export default function TouchControls({ showRestart }: { showRestart?: boolean }) {
+export default function TouchControls() {
   const [enabled, setEnabled] = useState(
     () =>
       new URLSearchParams(window.location.search).has("touch") ||
@@ -53,7 +53,6 @@ export default function TouchControls({ showRestart }: { showRestart?: boolean }
         <HoldButton code="ArrowLeft" label="◀" />
         <HoldButton code="ArrowRight" label="▶" />
       </div>
-      {showRestart && <HoldButton code="KeyR" label="R" />}
       <HoldButton code="ArrowUp" label="NHẢY" wide />
     </div>
   );

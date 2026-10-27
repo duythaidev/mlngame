@@ -1,18 +1,18 @@
 // src/pages/Room.tsx
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ref, set } from "firebase/database";
+import CharacterPicker, { CharacterPreview } from "../components/CharacterPicker";
 import GameCanvas from "../components/GameCanvas";
+import GameStage from "../components/GameStage";
+import { roleOf, type RoleId } from "../game/characters";
+import { START, type Progress } from "../game/progress";
 import TouchControls from "../components/TouchControls";
 import badgeStar from "../assets/badge-star.svg";
-import { db } from "../lib/firebase";
-import { PRESET_AVATARS, SLOT_COLORS } from "../lib/constants";
+import { SLOT_COLORS } from "../lib/constants";
 import { useDbValue, useUser } from "../lib/hooks";
 import { loadProfile, saveProfile } from "../lib/profile";
 import { joinRoom } from "../lib/rooms";
-import { fileToAvatar } from "../lib/avatar";
 import type { Profile, RoomMeta, SlotInfo } from "../lib/types";
-import { dispatchGameEvent } from "../net/gameSync";
 
 export default function Room() {
   const { id = "" } = useParams();
@@ -26,13 +26,12 @@ export default function Room() {
   // Hỗ trợ người vào thẳng qua link mà chưa có tên trong localStorage
   const [profile, setProfile] = useState<Profile>(() => {
     const p = loadProfile();
-    if (!p.avatar && PRESET_AVATARS[0]) {
-      p.avatar = PRESET_AVATARS[0].src;
-    }
+    p.avatar = roleOf(p.avatar); // nhân vật mặc định / chuyển ảnh cũ sang id vai
     return p;
   });
   const [needsName, setNeedsName] = useState(() => !loadProfile().name.trim());
   const [joinTrigger, setJoinTrigger] = useState(0);
+  const [progress, setProgress] = useState<Progress>(START);
 
   useEffect(() => {
     if (!uid) return;
@@ -71,22 +70,8 @@ export default function Room() {
     setJoinTrigger((t) => t + 1);
   }
 
-  async function onPickAvatar(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const avatar = await fileToAvatar(file);
-      const updated = { ...profile, avatar };
-      setProfile(updated);
-      saveProfile(updated);
-      setError("");
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  }
-
-  function handleSelectPreset(src: string) {
-    const updated = { ...profile, avatar: src };
+  function handleSelectRole(role: RoleId) {
+    const updated = { ...profile, avatar: role };
     setProfile(updated);
     saveProfile(updated);
   }
@@ -98,24 +83,15 @@ export default function Room() {
     });
   }
 
-  const setPhase = async (phase: "lobby" | "playing") => {
-    if (phase === "playing") {
-      await dispatchGameEvent(id, { type: "start", lv: meta.value?.level ?? "1" });
-    }
-    await set(ref(db, `roomList/${id}/phase`), phase).catch(console.error);
-  };
-
   const slots = slotsQ.value ?? {};
   const keys = Object.keys(slots).sort();
-  const isCoordinator = mySlot !== null && keys[0] === mySlot;
-  const isHost = isCoordinator;
 
   if (error) {
     return (
       <div className="page">
         <h1>
           <img src={badgeStar} alt="Star" style={{ width: 26, height: 26 }} />
-          PICO ROPE: ĐẠI ĐOÀN KẾT
+          PICO ROPE: MLN131
         </h1>
         <p className="err">{error}</p>
         <Link to="/" className="btn ghost sm">← Về trang chủ</Link>
@@ -134,7 +110,7 @@ export default function Room() {
   if (!meta.value) {
     return (
       <div className="page">
-        <h1>PICO ROPE: ĐẠI ĐOÀN KẾT</h1>
+        <h1>PICO ROPE: MLN131</h1>
         <div className="card">
           <p className="err">Phòng không tồn tại hoặc đã bị đóng.</p>
           <Link to="/" className="btn ghost">← Về danh sách phòng</Link>
@@ -173,29 +149,9 @@ export default function Room() {
 
             <div>
               <div className="muted" style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
-                Chọn hình đại diện:
+                Chọn nhân vật:
               </div>
-              <div className="preset-avatars-grid">
-                {PRESET_AVATARS.map((pa) => {
-                  const isSelected = profile.avatar === pa.src;
-                  return (
-                    <button
-                      type="button"
-                      key={pa.id}
-                      className={`preset-avatar-btn ${isSelected ? "selected" : ""}`}
-                      onClick={() => handleSelectPreset(pa.src)}
-                    >
-                      <img className="avatar" src={pa.src} alt={pa.name} />
-                      <span>{pa.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <span className="muted" style={{ fontSize: 12 }}>Tự tải ảnh riêng:</span>
-              <input type="file" accept="image/*" onChange={onPickAvatar} style={{ fontSize: 12 }} />
+              <CharacterPicker value={profile.avatar} onChange={handleSelectRole} />
             </div>
 
             <button
@@ -213,7 +169,7 @@ export default function Room() {
   }
 
   return (
-    <div className="page">
+    <div className={m.phase === "playing" ? "page page-wide" : "page"}>
       {/* Top Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
         <h1 style={{ margin: 0 }}>
@@ -238,12 +194,6 @@ export default function Room() {
             {copied ? "✓ Đã Chép Link!" : "🔗 Sao Chép Link Mời"}
           </button>
         </div>
-
-        {isHost && (
-          <span className="tag host" style={{ fontSize: 13 }}>
-            ★ Bạn là Chủ Phòng (Host)
-          </span>
-        )}
       </div>
 
       {/* Lobby Phase */}
@@ -254,14 +204,13 @@ export default function Room() {
               ★ Danh Sách Người Chơi Trong Phòng
             </h3>
             <span className="muted" style={{ fontSize: 13 }}>
-              Cần ít nhất 1 người chơi để bắt đầu
+              Ban tổ chức sẽ bắt đầu lượt thi cho mọi phòng
             </span>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
             {Array.from({ length: m.max }, (_, i) => `s${i}`).map((s, idx) => {
               const p = slots[s];
-              const isSlotHost = p && s === keys[0];
               const isMe = p && s === mySlot;
               const slotColor = SLOT_COLORS[idx % SLOT_COLORS.length];
 
@@ -271,8 +220,10 @@ export default function Room() {
                   key={s}
                   style={{ borderLeftWidth: 6, borderLeftColor: slotColor }}
                 >
-                  {p?.avatar ? (
-                    <img className="avatar" src={p.avatar} alt="" />
+                  {p ? (
+                    <div className="avatar" style={{ display: "grid", placeItems: "center" }}>
+                      <CharacterPreview role={roleOf(p.avatar, s)} scale={2} />
+                    </div>
                   ) : (
                     <div className="avatar" style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#888" }}>
                       Trống
@@ -284,7 +235,6 @@ export default function Room() {
                       {p ? p.name : <span className="muted" style={{ fontStyle: "italic" }}>(Đang đợi...)</span>}
                     </span>
                     <div style={{ display: "flex", gap: 4 }}>
-                      {isSlotHost && <span className="tag host" style={{ fontSize: 10, padding: "1px 6px" }}>Chủ phòng</span>}
                       {isMe && <span className="tag" style={{ fontSize: 10, padding: "1px 6px" }}>Bạn</span>}
                     </div>
                   </div>
@@ -294,23 +244,12 @@ export default function Room() {
           </div>
 
           <div style={{ marginTop: 24, textAlign: "center" }}>
-            {isHost ? (
-              <button
-                className="btn gold"
-                style={{ fontSize: 18, padding: "12px 28px" }}
-                disabled={keys.length < 1}
-                onClick={() => setPhase("playing")}
-              >
-                ★ BẮT ĐẦU CHƠI NGAY ★
-              </button>
-            ) : (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 18px", background: "var(--bg-subtle)", borderRadius: 8, border: "2px dashed var(--border)" }}>
-                <span style={{ fontSize: 16 }}>⏳</span>
-                <span className="muted" style={{ fontWeight: 600 }}>
-                  Đang chờ chủ phòng nhấn bắt đầu...
-                </span>
-              </div>
-            )}
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 18px", background: "var(--bg-subtle)", borderRadius: 8, border: "2px dashed var(--border)" }}>
+              <span style={{ fontSize: 16 }}>⏳</span>
+              <span className="muted" style={{ fontWeight: 600 }}>
+                Đang chờ ban tổ chức bắt đầu lượt thi...
+              </span>
+            </div>
           </div>
         </div>
       )}
@@ -321,7 +260,7 @@ export default function Room() {
           <div className="arcade-bezel-header">
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <img src={badgeStar} alt="Star" style={{ width: 18, height: 18 }} />
-              <span>PICO ROPE · {m.name.toUpperCase()}</span>
+              <span>NHÓM: {m.name.toUpperCase()}</span>
             </div>
             <div className="arcade-bezel-lights">
               <span className="red" />
@@ -335,9 +274,11 @@ export default function Room() {
               <p className="muted">Đang kết nối tín hiệu vào phòng…</p>
             </div>
           ) : (
-            <GameCanvas roomId={id} levelId={m.level} slots={slots} mySlot={mySlot} isCoordinator={isCoordinator} />
+            <GameStage progress={progress} footnote="Chờ ban tổ chức mở lượt mới">
+              <GameCanvas roomId={id} levelId={m.level} slots={slots} mySlot={mySlot} onProgress={setProgress} />
+            </GameStage>
           )}
-          {mySlot !== null && <TouchControls showRestart={isHost} />}
+          {mySlot !== null && <TouchControls />}
 
           <div className="arcade-controls-guide">
             <div>
@@ -349,20 +290,7 @@ export default function Room() {
               <span className="key-pill">W</span> hoặc <span className="key-pill">Space</span>
               <span className="key-pill">↑</span> Bật nhảy
             </div>
-            {isHost && (
-              <div>
-                <span className="key-pill">R</span> Chơi lại khi thắng
-              </div>
-            )}
           </div>
-
-          {isHost && (
-            <div style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
-              <button className="btn ghost sm" onClick={() => setPhase("lobby")}>
-                ⤺ Kết Thúc & Về Sảnh Chờ
-              </button>
-            </div>
-          )}
         </div>
       )}
     </div>
