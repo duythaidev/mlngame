@@ -48,7 +48,7 @@ describe("5 phần mỗi level", () => {
   });
 
   it("ảnh thật .jpg được ưu tiên", () => {
-    expect(partImage("1", 1)).toBe("/art/l1p2.jpg");
-    expect(partImage("1", 0)).toBe("/art/l1p1.webp");
+    expect(partImage("1", 0)).toBe("/art/l1p2.jpg");
+    expect(partImage("1", 1)).toBe("/art/l1p3.webp");
   });
 });

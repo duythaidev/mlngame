@@ -18,7 +18,7 @@ it("tem theo phần", () => {
 
 it("dữ liệu thời kỳ lấy từ story.ts", () => {
   for (const id of [1, 2, 3, 4, 5]) expect(ERAS_DATA[id].steps).toHaveLength(partCountOf(String(id)));
-  expect(ERAS_DATA[1].steps[1].img).toBe("/art/l1p2.jpg");
+  expect(ERAS_DATA[1].steps[0].img).toBe("/art/l1p2.jpg"); // ảnh theo `art` của thẻ
   expect(ERAS_DATA[3].eraImg).toBe("/art/era3.webp");
   const all = Object.values(ERAS_DATA).flatMap((e) => e.steps.map((s) => s.source + s.quote));
   expect(all.some((s) => s.includes("Versailles"))).toBe(false);
