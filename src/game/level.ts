@@ -24,7 +24,7 @@ export type ObjSpec =
   | { t: "ice" } // sàn băng (đặc, trơn cố định)
   | { t: "slow"; sig?: string; label?: string } // vùng chậm (không đặc); sig bật → biến mất
   | { t: "lift"; rise: number; need?: Need; drop?: boolean; label?: string } // thang / bục số (drop: thiếu người là hạ)
-  | { t: "mover"; path: [number, number][]; need?: Need; stops?: number[]; pads?: boolean; label?: string } // sàn chở
+  | { t: "mover"; path: [number, number][]; need?: Need; stops?: number[]; wait?: number; pads?: boolean; label?: string } // sàn chở (stops = chỉ số điểm dừng; wait = giây dừng mỗi trạm, mặc định PHYS.stopWait)
   | { t: "box"; weight: Need; sig?: string; label?: string } // khối số: đủ `weight` người đẩy mới đi; có trọng lực
   | { t: "goal"; sig: string; label?: string } // ô đích của khối (không đặc)
   | { t: "conveyor"; speed: number } // băng chuyền (đặc): + sang phải, − sang trái (ô/s)
@@ -50,12 +50,28 @@ export interface SegmentDef {
   door?: string; // tên tín hiệu (trong đoạn này) mở cửa cuối level
 }
 
+export type Scene = "scroll" | "flag" | "podium" | "ballot" | "constitution" | "gears" | "scale" | "arch" | "birds" | "sun";
+
+/** Thẻ tư liệu của một phần: hiện ở cổng mốc, khung tư liệu bên phải canvas, tem. */
+export interface PartCard {
+  year: string; // to trên cổng mốc, khung tư liệu, tem (≤ 10 ký tự)
+  phrase: string; // cụm ≤ 6 từ
+  line: string; // 1 dòng tóm tắt nội dung ≤ 120 ký tự
+  source: string; // nguồn cụ thể (văn kiện / mục giáo trình / lời trích) — bắt buộc
+  scene: Scene; // hình vẽ khắc gỗ dự phòng khi ảnh chưa tải
+  art: string; // tên file ảnh trong public/art, vd "l2p4.jpg"
+}
+
+/** Một phần của level = thẻ tư liệu + các đoạn hình học của phần đó. Level luyện tập: phần không có thẻ. */
+export interface PartDef {
+  card?: PartCard;
+  segments: SegmentDef[];
+}
+
 export interface ChapterDef {
   id: string;
   name: string;
-  /** Chỉ số đoạn mở đầu mỗi phần (có cổng mốc + ảnh tư liệu). Không có = mỗi đoạn một phần. */
-  parts?: number[];
-  segments: SegmentDef[];
+  parts: PartDef[]; // 1 phần trở lên (level chính: 3–5 phần, mỗi phần có card)
 }
 
 export interface ObjDef {
@@ -186,13 +202,19 @@ function mergeCells(cells: { x: number; y: number }[]): Rect[] {
   return merged;
 }
 
-/** Đoạn → phần theo def.parts (chỉ số đoạn mở đầu mỗi phần, tăng dần, bắt đầu từ 0). */
-function partsOf(def: ChapterDef): { partOf: number[]; partCount: number } {
-  const starts = def.parts ?? def.segments.map((_, i) => i);
-  if (starts[0] !== 0 || starts.some((s, i) => i > 0 && s <= starts[i - 1]) || starts[starts.length - 1] >= def.segments.length)
-    throw new Error(`Level ${def.id}: parts phải tăng dần, bắt đầu từ 0 và nhỏ hơn số đoạn`);
-  const partOf = def.segments.map((_, si) => starts.filter((s) => s <= si).length - 1);
-  return { partOf, partCount: starts.length };
+/** Các đoạn của level theo thứ tự, và đoạn → phần (mỗi phần phải có ít nhất 1 đoạn). */
+function flatten(def: ChapterDef): { segments: SegmentDef[]; partOf: number[]; partCount: number } {
+  if (def.parts.length === 0) throw new Error(`Level ${def.id}: cần ít nhất 1 phần`);
+  const segments: SegmentDef[] = [];
+  const partOf: number[] = [];
+  def.parts.forEach((p, pi) => {
+    if (p.segments.length === 0) throw new Error(`Level ${def.id} phần ${pi + 1}: cần ít nhất 1 đoạn`);
+    for (const s of p.segments) {
+      segments.push(s);
+      partOf.push(pi);
+    }
+  });
+  return { segments, partOf, partCount: def.parts.length };
 }
 
 /** Phần (0-based) chứa cột mốc hiện tại của nhóm. */
@@ -202,10 +224,11 @@ export function partAt(level: Level, cp: number): number {
 
 /** Ghép các đoạn theo chiều ngang (thêm vách trái/phải) rồi dựng Level. Xuất ra để test dựng level riêng. */
 export function buildLevel(def: ChapterDef): Level {
+  const { segments, partOf, partCount } = flatten(def);
   const H = 16;
   const offsets: number[] = [];
   let w = 1; // cột 0 = vách trái
-  def.segments.forEach((s, i) => {
+  segments.forEach((s, i) => {
     if (s.rows.length !== H) throw new Error(`Level ${def.id} đoạn ${i + 1}: cần ${H} hàng, có ${s.rows.length}`);
     const sw = s.rows[0].length;
     s.rows.forEach((r, y) => {
@@ -231,7 +254,7 @@ export function buildLevel(def: ChapterDef): Level {
     solidCells.push({ x: 0, y }, { x: w - 1, y });
   }
 
-  def.segments.forEach((s, si) => {
+  segments.forEach((s, si) => {
     const ox = offsets[si];
     // tên tín hiệu: "*TÊN" = dùng chung cả level (vd phiếu nhặt ở đoạn 3, nộp ở đoạn 4); còn lại riêng từng đoạn
     const pre = (name: string) => (name.startsWith("*") ? name : `${si}.${name}`);
@@ -301,9 +324,10 @@ export function buildLevel(def: ChapterDef): Level {
     door,
     spawn,
     checkpoints,
-    segCount: def.segments.length,
+    segCount: segments.length,
     segX: offsets,
-    ...partsOf(def),
+    partOf,
+    partCount,
     objects,
     sigs,
     doorSig,

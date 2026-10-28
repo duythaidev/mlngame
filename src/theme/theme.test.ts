@@ -42,10 +42,10 @@ it("hạt giống: cùng level → cùng dãy số", () => {
   expect(seedOf("1")).not.toBe(seedOf("2"));
 });
 
-it("cổng mốc: mỗi level 5 cổng, phần 0..4, cổng đầu ở xuất phát", () => {
+it("cổng mốc: mỗi phần một cổng (4 hoặc 5 phần), cổng đầu ở xuất phát", () => {
   for (const id of LEVEL_IDS) {
     const ms = milestones(getLevel(id));
-    expect(ms.map((m) => m.part)).toEqual([0, 1, 2, 3, 4]);
+    expect(ms.map((m) => m.part)).toEqual(Array.from({ length: getLevel(id).partCount }, (_, i) => i));
     expect(ms[0].cp).toBe(0);
   }
 });

@@ -1,15 +1,16 @@
 // src/components/illustrations/ConclusionPoster.tsx
-// Màn kết (spec B6): 5 ảnh thời kỳ nối dây · câu hỏi · "KHÔNG MÂU THUẪN" hiện từng chữ · 3 ý · lưới 25 tem.
+// Màn kết (spec B6): 5 ảnh thời kỳ nối dây · câu hỏi · "KHÔNG MÂU THUẪN" hiện từng chữ · 3 ý · lưới tem.
 // Chữ lấy từ ENDING trong src/game/story.ts.
 import React, { useState } from "react";
-import { ENDING } from "../../game/story";
+import { ENDING, stampsBefore } from "../../game/story";
+import { maxStamps } from "./stamps";
 import { ERAS_DATA } from "./erasData";
 
 export interface ConclusionPosterProps {
   className?: string;
   id?: string;
   onReplaySeal?: () => void;
-  /** Số tem đã thu (0..25); mặc định 25. */
+  /** Số tem đã thu; mặc định = tổng số phần của mọi level. */
   stampsEarned?: number;
   /** Có thì hiện nút "Chơi lại". */
   onReplay?: () => void;
@@ -41,7 +42,7 @@ export const ConclusionPoster: React.FC<ConclusionPosterProps> = ({
   className = "",
   id,
   onReplaySeal,
-  stampsEarned = 25,
+  stampsEarned = maxStamps(),
   onReplay,
   footnote,
 }) => {
@@ -121,11 +122,11 @@ export const ConclusionPoster: React.FC<ConclusionPosterProps> = ({
           ))}
         </div>
 
-        {/* Lưới 25 tem: 5 level × 5 phần */}
-        <div className="poster-stamp-grid" aria-label={`${stampsEarned}/25 tem`}>
+        {/* Lưới tem: mỗi phần của mỗi level một tem */}
+        <div className="poster-stamp-grid" aria-label={`${stampsEarned}/${maxStamps()} tem`}>
           {[1, 2, 3, 4, 5].map((e) =>
             ERAS_DATA[e].steps.map((s, i) => {
-              const n = (e - 1) * 5 + i;
+              const n = stampsBefore(e) + i;
               return (
                 <div key={n} className={`poster-stamp ${n < stampsEarned ? "on" : ""}`} data-era={e} title={`${s.year} · ${s.title}`}>
                   <span>{s.year}</span>

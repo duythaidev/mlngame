@@ -74,9 +74,10 @@ export const TimelineRibbon: React.FC<TimelineRibbonProps> = ({
   id = "block2Ribbon",
 }) => {
   const era = ERAS_DATA[currentEra] ?? ERAS_DATA[1];
-  const earned = earnedStamps(currentPart, won);
+  const count = era.steps.length;
+  const earned = earnedStamps(currentPart, won, count);
   // thanh ray: tô tới thời kỳ hiện tại + tiến độ trong level
-  const fillPct = ((currentEra - 1 + earned / 5) / 4) * 100;
+  const fillPct = ((currentEra - 1 + earned / count) / 4) * 100;
 
   // tem vừa có (số tem TĂNG trong cùng level) thì bay vào ô; giảm / đổi level thì không bay
   const prev = useRef({ era: currentEra, earned });

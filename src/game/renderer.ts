@@ -283,6 +283,24 @@ function drawObjects(ctx: CanvasRenderingContext2D, level: Level, th: Theme, s: 
           h: 0,
         }));
         drawMover(ctx, b, th, sp.pads ? moverPadCount(n) : 0, path, t);
+        // đang ở một trạm dừng (vị trí trùng điểm dừng, chưa phải điểm cuối) → biểu tượng "tạm dừng" trên sàn
+        const cx = b.x + b.w / 2;
+        const cy = b.y + b.h / 2;
+        const atStop = (sp.stops ?? []).some((i) => i < sp.path.length - 1 && Math.hypot(path[i].x - cx, path[i].y - cy) < 3);
+        if (atStop) {
+          const bx = cx;
+          const by = b.y - 34;
+          ctx.fillStyle = "rgba(255, 193, 7, 0.95)";
+          ctx.strokeStyle = INK;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(bx, by, 11, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = INK; // hai vạch ⏸
+          ctx.fillRect(bx - 5, by - 5, 3.5, 10);
+          ctx.fillRect(bx + 1.5, by - 5, 3.5, 10);
+        }
         break;
       }
       case "box": {

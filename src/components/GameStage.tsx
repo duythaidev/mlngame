@@ -5,7 +5,7 @@
 // Màn dọc / hẹp (điện thoại): khung tư liệu xuống dưới canvas, co theo chiều rộng. Có nút toàn màn hình cho máy chiếu.
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import type { Progress } from "../game/progress";
-import { eraImage, partImage } from "../game/story";
+import { eraImage, partCountOf, partImage } from "../game/story";
 import { ConclusionPoster } from "./illustrations/ConclusionPoster";
 import { EraSplashBanner } from "./illustrations/EraSplashBanner";
 import { StoryPolaroidCard } from "./illustrations/StoryPolaroidCard";
@@ -101,7 +101,7 @@ export default function GameStage({ progress, children, onReplay, footnote }: Pr
   // tải trước ảnh phần kế và bìa level kế để khung tư liệu không bị trắng
   useEffect(() => {
     if (era <= 0) return;
-    if (part < 4) preload(partImage(levelId, part + 1));
+    if (part < partCountOf(levelId) - 1) preload(partImage(levelId, part + 1));
     if (era < 5) preload(eraImage(String(era + 1)));
   }, [era, part, levelId]);
 
@@ -132,7 +132,7 @@ export default function GameStage({ progress, children, onReplay, footnote }: Pr
             {splashEra > 0 && <EraSplashBanner key={splashEra} currentEra={splashEra} overlay onDone={() => setSplashEra(0)} />}
             {ending && (
               <div className="game-stage-ending">
-                <ConclusionPoster stampsEarned={25} onReplay={onReplay} footnote={footnote} />
+                <ConclusionPoster onReplay={onReplay} footnote={footnote} />
               </div>
             )}
             <button

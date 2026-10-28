@@ -651,7 +651,7 @@ export class GameEngine {
     const ey = ty - p.y;
     const dist = Math.hypot(ex, ey);
     if (dist < 1e-4) {
-      if (spec.stops?.includes(o.wp)) o.wait = PHYS.stopWait;
+      if (spec.stops?.includes(o.wp)) o.wait = spec.wait ?? PHYS.stopWait;
       o.wp++;
       b.setLinearVelocity(new Vec2(0, 0));
     } else {

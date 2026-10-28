@@ -14,7 +14,7 @@ const solid = "#".repeat(W);
 /** Một đoạn: `top` = các hàng ngay trên nền (hàng cuối là hàng 11), `floor` = hàng 12..15 (mặc định đặc). */
 function level(top: string[], objs: Record<string, ObjSpec> = {}, sigs: Record<string, SigSpec> = {}, floor?: string[], door?: string) {
   const rows = [solid, ...Array.from({ length: 11 - top.length }, () => empty), ...top, ...(floor ?? [solid, solid, solid, solid])];
-  return buildLevel({ id: "test", name: "test", segments: [{ rows, objs, sigs, door }] });
+  return buildLevel({ id: "test", name: "test", parts: [{ segments: [{ rows, objs, sigs, door }] }] });
 }
 
 type Inp = { l: 0 | 1; r: 0 | 1; j: 0 | 1 };
@@ -282,8 +282,8 @@ describe("5 level dựng được và không ai chết khi đứng yên ở xu�
     for (const n of [2, 5]) {
       it(`level ${id}, ${n} người`, () => {
         const L = getLevel(id);
-        expect(L.segCount).toBeGreaterThanOrEqual(5);
-        expect(L.partCount).toBe(5);
+        expect(L.segCount).toBeGreaterThanOrEqual(3);
+        expect(L.partCount).toBeGreaterThanOrEqual(3);
         const e = new GameEngine(L, slots(n));
         run(e, 60 * 3);
         expect(e.snapshot().r).toBe(0);

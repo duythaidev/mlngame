@@ -90,7 +90,8 @@ export const StoryPolaroidCard: React.FC<StoryPolaroidCardProps> = ({
           )}
 
           <div className="archive-step-dots">
-            {[1, 2, 3, 4, 5].map((s) => {
+            {era.steps.map((_, k) => {
+              const s = k + 1;
               const cls = s < currentStep ? "done" : s === currentStep ? "active" : "";
               return (
                 <button
@@ -99,7 +100,7 @@ export const StoryPolaroidCard: React.FC<StoryPolaroidCardProps> = ({
                   className={`step-dot-btn ${cls}`}
                   onClick={onSelectStep ? () => onSelectStep(s) : undefined}
                   disabled={!onSelectStep}
-                  aria-label={`Phần ${s}/5`}
+                  aria-label={`Phần ${s}/${era.steps.length}`}
                 />
               );
             })}
